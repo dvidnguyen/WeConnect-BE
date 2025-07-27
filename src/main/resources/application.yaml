@@ -1,0 +1,28 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /weconnect
+
+spring:
+  datasource:
+    url:
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+app:
+  file:
+    storage-dir: D:/upload
+    dowload-prefix: http://localhost:8080/identity/media/
+
+jwt:
+  valid-duration: 3600
+  refresh-duration: 360000
+  signerKey: "/fVsiuXso0XANi6In?w8CiF!zf0qQ6DdC6vvpfw?tdstg?YisbW0/ZEJ8VoUuE4jrRg?048UV3tD4LZnH7EUoYppt4J943NMrA64YoCMib6tlcIG2k5QF/9hhrGc!EprxtCdJhqkdIi6xis0MwrJyopN0cXRPPFcZq6gwMnpuekDCYR8wEqEXfFgWS-Urd?v=Q60!WohGE48T3FQESZPDzqJnPp2xFUCPQiUvWeCHyGJ64q=7xYLVPNQMhQJub98"
