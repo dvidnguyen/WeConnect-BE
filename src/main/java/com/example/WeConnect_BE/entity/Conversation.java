@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "CONVERSATION")
 public class Conversation {
     @Id
-    private UUID id;
+    private String id;
 
     private String name;
 

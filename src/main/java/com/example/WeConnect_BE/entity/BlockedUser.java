@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "BLOCKED_USER")
 public class BlockedUser {
     @Id
-    private UUID id;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

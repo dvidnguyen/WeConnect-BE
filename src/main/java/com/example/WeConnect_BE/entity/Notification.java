@@ -12,11 +12,11 @@ import java.util.UUID;
 @Table(name = "NOTIFICATION")
 public class Notification {
     @Id
-    private UUID id;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private User user_id;
 
     private String title;
     private String body;

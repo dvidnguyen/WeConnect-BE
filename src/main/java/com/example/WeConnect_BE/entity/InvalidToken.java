@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "INVALID_TOKEN")
 public class InvalidToken {
     @Id
-    private UUID token;
+    private String token;
 
     private LocalDateTime createdAt;
 }

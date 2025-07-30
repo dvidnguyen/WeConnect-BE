@@ -19,7 +19,8 @@ public class VerifyCode {
     private User user;
 
     private String code;
-
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+    @Column(name = "expires_at")
     private LocalDateTime expiredAt;
 }

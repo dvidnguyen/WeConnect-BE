@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "MESSAGE")
 public class Message {
     @Id
-    private UUID id;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "conversation_id")

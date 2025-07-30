@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "FILE")
 public class File {
     @Id
-    private UUID id;
+    private String id;
 
     private String name;
     private String type;
