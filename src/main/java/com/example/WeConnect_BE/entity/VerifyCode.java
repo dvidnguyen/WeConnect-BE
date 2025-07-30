@@ -1,4 +1,25 @@
 package com.example.WeConnect_BE.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Data
+@Table(name = "VERIFY_CODE")
 public class VerifyCode {
+    @Id
+    private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private String code;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime expiredAt;
 }

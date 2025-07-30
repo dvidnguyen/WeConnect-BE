@@ -1,4 +1,7 @@
 package com.example.WeConnect_BE.repository;
 
-public interface InvalidTokenRepository {
-}
+import com.example.WeConnect_BE.entity.InvalidToken;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.UUID;
+
+public interface InvalidTokenRepository extends JpaRepository<InvalidToken, UUID> {}
