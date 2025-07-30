@@ -1,4 +1,7 @@
 package com.example.WeConnect_BE.repository;
 
-public interface NotificationRepository {
-}
+import com.example.WeConnect_BE.entity.Notification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.UUID;
+
+public interface NotificationRepository extends JpaRepository<Notification, UUID> {}

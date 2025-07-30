@@ -1,4 +1,7 @@
 package com.example.WeConnect_BE.repository;
 
-public interface ConversationRepository {
-}
+import com.example.WeConnect_BE.entity.Conversation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.UUID;
+
+public interface ConversationRepository extends JpaRepository<Conversation, UUID> {}
