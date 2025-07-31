@@ -21,6 +21,7 @@ app:
   file:
     storage-dir: D:/upload
     dowload-prefix: http://localhost:8080/identity/media/
+  cors-origin: http://localhost:3000
 
 jwt:
   valid-duration: 3600
