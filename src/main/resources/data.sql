@@ -1,68 +1,65 @@
--- USER
-INSERT INTO USER (id, email, password_hash, username, avatar_url, status, created_at, updated_at)
-VALUES
-    ('11111111-1111-1111-1111-111111111111', 'alice@example.com', 'hash1', 'Alice', 'https://example.com/avatar1.png', true, NOW(), NOW()),
-    ('22222222-2222-2222-2222-222222222222', 'bob@example.com', 'hash2', 'Bob', 'https://example.com/avatar2.png', true, NOW(), NOW()),
-    ('33333333-3333-3333-3333-333333333333', 'charlie@example.com', 'hash3', 'Charlie', NULL, true, NOW(), NOW());
 
--- FRIEND
-INSERT INTO FRIEND (id, requester_id, addressee_id, status, created_at)
-VALUES
-    (UUID(), '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'ACCEPTED', NOW()),
-    (UUID(), '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', 'PENDING', NOW());
 
--- BLOCKED_USER
-INSERT INTO BLOCKED_USER (id, user_id, blocked_user_id, blocked_at)
-VALUES
-    (UUID(), '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', NOW());
 
--- CONVERSATION
-INSERT INTO CONVERSATION (id, type, name, avatar, created_by, created_at)
+INSERT INTO users (id, email, password_hash, username, avatar_url, status, created_at, updated_at)
 VALUES
-    ('conv-0000-0000-0000-000000000001', 'GROUP', 'Project Team', 'https://example.com/group.png', '11111111-1111-1111-1111-111111111111', NOW());
+    ('u1', 'alice@example.com', 'hashed_pw1', 'Alice', 'https://avatar.com/alice.png', TRUE, NOW(), NOW()),
+    ('u2', 'bob@example.com', 'hashed_pw2', 'Bob', 'https://avatar.com/bob.png', TRUE, NOW(), NOW()),
+    ('u3', 'carol@example.com', 'hashed_pw3', 'Carol', NULL, TRUE, NOW(), NOW());
 
--- MEMBER
-INSERT INTO MEMBER (id, conversation_id, user_id, role, joined_at)
+INSERT INTO conversation (id, type, name, avatar, created_by, created_at)
 VALUES
-    (UUID(), 'conv-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'ADMIN', NOW()),
-    (UUID(), 'conv-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'MEMBER', NOW());
+    ('c1', 'direct', NULL, NULL, 'u1', NOW()),
+    ('c2', 'group', 'Group Chat', 'https://group.avatar/img.png', 'u2', NOW());
 
--- MESSAGE
-INSERT INTO MESSAGE (id, conversation_id, sender_id, type, content, status, timestamp)
+INSERT INTO friend (id, requester_id, addressee_id, status, created_at)
 VALUES
-    ('msg-0000-0000-0000-000000000001', 'conv-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'TEXT', 'Hello team!', 'SENT', NOW());
+    ('f1', 'u1', 'u2', 'accepted', NOW()),
+    ('f2', 'u1', 'u3', 'pending', NOW());
 
--- FILE
-INSERT INTO FILE (id, messageId, type, fileName, url, path, md5checksum)
+INSERT INTO blocked_user (id, user_id, blocked_user_id, blocked_at)
 VALUES
-    (UUID(), 'msg-0000-0000-0000-000000000001', 'IMAGE', 'image1.png', 'https://example.com/image1.png', '/uploads/image1.png', 'abc123def456ghi789');
+    ('b1', 'u3', 'u2', NOW());
 
--- MESSAGE_REACTION
-INSERT INTO MESSAGE_REACTION (id, message_id, user_id, emoji, reacted_at)
+INSERT INTO member (id, conversation_id, user_id, role, joined_at)
 VALUES
-    (UUID(), 'msg-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', '👍', NOW());
+    ('m1', 'c2', 'u1', 'admin', NOW()),
+    ('m2', 'c2', 'u2', 'member', NOW());
 
--- READ_RECEIPT
-INSERT INTO READ_RECEIPT (id, message_id, user_id, read_at, status)
+INSERT INTO message (id, conversation_id, sender_id, type, content, status, timestamp)
 VALUES
-    (UUID(), 'msg-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', NOW(), TRUE);
+    ('msg1', 'c2', 'u1', 'text', 'Hello team!', 'read', NOW()),
+    ('msg2', 'c2', 'u2', 'image', 'Check this out', 'delivered', NOW());
 
--- VERIFY_CODE
-INSERT INTO VERIFY_CODE (id, user_id, code, expires_at, status, created_at)
+INSERT INTO file (id, message_id, type, fileName, url, path, md5checksum)
 VALUES
-    (UUID(), '11111111-1111-1111-1111-111111111111', '123456', DATE_ADD(NOW(), INTERVAL 10 MINUTE), TRUE, NOW());
+    ('f01', 'msg2', 'image', 'image1.png', 'https://files.com/image1.png', '/files/image1.png', 'md5dummyhash');
 
--- USER_SESSION
-INSERT INTO USER_SESSION (id, sessionId, created_at, expires_at)
+INSERT INTO message_reaction (id, message_id, user_id, emoji, reacted_at)
 VALUES
-    (UUID(), 'session-abc123', NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY));
+    ('r1', 'msg1', 'u2', '👍', NOW());
 
--- INVALID_TOKEN
-INSERT INTO INVALID_TOKEN (token, created_at, expires_at)
+INSERT INTO read_receipt (id, message_id, user_id, read_at, status)
 VALUES
-    ('expired-token-xyz', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY));
+    ('rr1', 'msg1', 'u2', NOW(), TRUE);
 
--- NOTIFICATION
-INSERT INTO NOTIFICATION (id, user_id, title, body, type, related_id, is_read, created_at)
+INSERT INTO verify_code (id, user_id, code, expires_at, status, created_at)
 VALUES
-    (UUID(), '11111111-1111-1111-1111-111111111111', 'Welcome', 'Welcome to WeConnect!', 'INFO', NULL, FALSE, NOW());
+    ('v1', 'u1', 'ABC123', DATE_ADD(NOW(), INTERVAL 1 DAY), TRUE, NOW());
+
+INSERT INTO user_session (id, sessionId, created_at, expires_at)
+VALUES
+    ('u1', 'sess123', NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY));
+
+INSERT INTO invalid_token (token, created_at, expires_at)
+VALUES
+    ('invalidtok123', NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY));
+
+INSERT INTO notification (id, title, body, type, related_id, created_at)
+VALUES
+    ('n1', 'New Message', 'You got a new message', 'new_message', 'msg1', NOW());
+
+INSERT INTO user_notification (id, user_id, notification_id, is_read)
+VALUES
+    ('un1', 'u2', 'n1', FALSE),
+    ('un2', 'u1', 'n1', TRUE);
