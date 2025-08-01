@@ -1,16 +1,15 @@
 package com.example.WeConnect_BE.controller;
 
 import com.example.WeConnect_BE.dto.ApiResponse;
+import com.example.WeConnect_BE.dto.request.RegisterRequest;
+import com.example.WeConnect_BE.dto.response.RegisterReponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.util.List;
@@ -22,10 +21,10 @@ import java.util.List;
 public class authenticationController {
     AuthenticationService authenticationService;
 
-    @GetMapping("/introspect")
-    public String introspect() {
-        return "hello";
-    }
+//    @GetMapping("/introspect")
+//    public String introspect() {
+//        return "hello";
+//    }
     @PostMapping("/user")
     public ApiResponse<List<User>> getuser() throws ParseException, JOSEException {
         return ApiResponse.<List<User>>builder()
@@ -40,5 +39,10 @@ public class authenticationController {
 //                .result(result)
 //                .build();
 
-
+//    @PostMapping("/user")
+//    public ApiResponse<RegisterReponse> regis(@RequestParam RegisterRequest request) throws ParseException, JOSEException {
+//        return ApiResponse.<List<User>>builder()
+//                .result(authenticationService.getUser())
+//                .build();
+//    }
 }

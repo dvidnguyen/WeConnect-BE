@@ -12,17 +12,15 @@ import java.util.UUID;
 @Table(name = "NOTIFICATION")
 public class Notification {
     @Id
-    private UUID id;
+    private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user_id;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
     private String title;
     private String body;
     private String type;
+    @Column(name = "related_id")
     private String relatedId;
 
     private boolean isRead;

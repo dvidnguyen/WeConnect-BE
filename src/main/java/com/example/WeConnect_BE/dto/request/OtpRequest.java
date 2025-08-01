@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RegisterRequest {
-    String name;
+public class OtpRequest {
     String email;
-    String password;
 }

@@ -2,8 +2,10 @@ package com.example.WeConnect_BE.service;
 
 import com.example.WeConnect_BE.dto.request.AuthenticationRequest;
 import com.example.WeConnect_BE.dto.request.IntrospectRequest;
+import com.example.WeConnect_BE.dto.request.RegisterRequest;
 import com.example.WeConnect_BE.dto.response.AuthenticationResponse;
 import com.example.WeConnect_BE.dto.response.IntrospectResponse;
+import com.example.WeConnect_BE.dto.response.RegisterReponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
@@ -68,7 +70,14 @@ public class AuthenticationService {
     public List<User> getUser() throws AppException, JOSEException, ParseException {
         return userRepository.findAll();
     }
-
+//    public RegisterReponse register(RegisterRequest request){
+//        //check email exist
+//        boolean valid = userRepository.existsByEmail(request.getEmail());
+//        // store otp to db
+//
+//        //send opt to client mail
+//        return null;
+//    }
 
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
         var user = userRepository.findByEmail(authenticationRequest.getEmail())

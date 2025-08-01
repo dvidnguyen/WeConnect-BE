@@ -1,4 +1,4 @@
-package com.example.WeConnect_BE.dto.request;
+package com.example.WeConnect_BE.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RegisterRequest {
-    String name;
-    String email;
-    String password;
+public class OtpResponse {
+    String otp;
 }
