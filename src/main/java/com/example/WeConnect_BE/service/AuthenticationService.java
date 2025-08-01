@@ -9,6 +9,7 @@ import com.example.WeConnect_BE.dto.response.RegisterReponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
+import com.example.WeConnect_BE.mapper.UserMapper;
 import com.example.WeConnect_BE.repository.InvalidTokenRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
 import com.nimbusds.jose.*;
@@ -40,6 +41,7 @@ import java.util.UUID;
 public class AuthenticationService {
     UserRepository userRepository;
     InvalidTokenRepository invalidTokenRepository;
+    UserMapper userMapper;
     @NonFinal
     @Value("${jwt.signerKey}")
     private String KEY_SIGNTURE;
@@ -70,14 +72,19 @@ public class AuthenticationService {
     public List<User> getUser() throws AppException, JOSEException, ParseException {
         return userRepository.findAll();
     }
-//    public RegisterReponse register(RegisterRequest request){
-//        //check email exist
-//        boolean valid = userRepository.existsByEmail(request.getEmail());
-//        // store otp to db
-//
-//        //send opt to client mail
-//        return null;
-//    }
+    public RegisterReponse register(RegisterRequest request){
+        //check email exist
+        boolean valid = !userRepository.existsByEmail(request.getEmail());
+
+        User user = userMapper.toUser(request);
+        user.setStatus(0);
+        userRepository.save(user);
+
+        return RegisterReponse.builder()
+                .email(request.getEmail())
+                .valid(valid)
+                .build();
+    }
 
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
         var user = userRepository.findByEmail(authenticationRequest.getEmail())
@@ -96,7 +103,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    private String generateToken(User user) {
+    public String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getId())

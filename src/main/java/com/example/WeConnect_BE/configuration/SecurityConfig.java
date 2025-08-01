@@ -24,7 +24,8 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/auth/introspect",
             "/auth/regis",
-            "api/otp/send"
+            "api/otp/send",
+            "api/otp/verify",
 
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
