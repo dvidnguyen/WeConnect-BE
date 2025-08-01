@@ -12,7 +12,16 @@ import java.util.UUID;
 @Table(name = "INVALID_TOKEN")
 public class InvalidToken {
     @Id
-    private String token;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID token;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+        }
+    }
 }

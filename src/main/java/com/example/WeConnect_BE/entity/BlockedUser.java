@@ -12,15 +12,24 @@ import java.util.UUID;
 @Table(name = "BLOCKED_USER")
 public class BlockedUser {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blocked_user_id")
     private User blockedUser;
 
+    @Column(name = "blocked_at")
     private LocalDateTime blockedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (blockedAt == null) {
+            blockedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+        }
+    }
 }

@@ -12,17 +12,26 @@ import java.util.UUID;
 @Table(name = "MESSAGE_REACTION")
 public class MessageReaction {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
-    private Message message; // Entity này bạn cần tự định nghĩa tiếp
+    private Message message;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     private String emoji;
 
+    @Column(name = "reacted_at")
     private LocalDateTime reactedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (reactedAt == null) {
+            reactedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+        }
+    }
 }

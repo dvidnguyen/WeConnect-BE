@@ -12,15 +12,18 @@ import java.util.UUID;
 @Table(name = "VERIFY_CODE")
 public class VerifyCode {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     private String code;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
     @Column(name = "expires_at")
     private LocalDateTime expiredAt;
 }

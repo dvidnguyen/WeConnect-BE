@@ -12,16 +12,28 @@ import java.util.UUID;
 @Table(name = "FILE")
 public class File {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     private String name;
+
     private String type;
+
     private Long size;
+
     private String url;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
     private Message message;
 
+    @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (uploadedAt == null) {
+            uploadedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+        }
+    }
 }

@@ -12,14 +12,19 @@ import java.util.UUID;
 @Table(name = "USER_SESSION")
 public class UserSession {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     private String device;
     private String ipAddress;
+
+    @Column(name = "login_at")
     private LocalDateTime loginAt;
+
+    @Column(name = "logout_at")
     private LocalDateTime logoutAt;
 }

@@ -17,38 +17,40 @@ import java.util.UUID;
 @Table(name = "\"USER\"")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private UUID id;
 
     private String email;
 
     private String username;
+
     @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
-    private String status;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private boolean status;  // Thường dùng kiểu boolean thay vì String cho status
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<VerifyCode> verifyCodes;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BlockedUser> blockedUsers;
 
-    @OneToMany(mappedBy = "blockedUser", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "blockedUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BlockedUser> blockedByOthers;
 
-    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Friend> sentFriendRequests;
 
-    @OneToMany(mappedBy = "addressee", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "addressee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Friend> receivedFriendRequests;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MessageReaction> reactions;
 }
 

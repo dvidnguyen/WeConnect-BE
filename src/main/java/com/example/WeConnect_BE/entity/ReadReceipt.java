@@ -12,15 +12,17 @@ import java.util.UUID;
 @Table(name = "READ_RECEIPT")
 public class ReadReceipt {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
     private Message message;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "read_at")
     private LocalDateTime readAt;
 }

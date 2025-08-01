@@ -12,17 +12,26 @@ import java.util.UUID;
 @Table(name = "MEMBER")
 public class Member {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id")
     private Conversation conversation;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
+    @Column(name = "joined_at")
     private LocalDateTime joinedAt;
+
+
+    public enum Role {
+        ADMIN,
+        MEMBER
+    }
 }
