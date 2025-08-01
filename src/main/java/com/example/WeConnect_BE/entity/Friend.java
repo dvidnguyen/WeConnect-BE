@@ -30,7 +30,7 @@ public class Friend {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Enum FriendStatus (Thêm nếu chưa có)
+
     public enum FriendStatus {
         PENDING,
         ACCEPTED,

@@ -30,7 +30,7 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    private boolean status;  // Thường dùng kiểu boolean thay vì String cho status
+    private boolean status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;

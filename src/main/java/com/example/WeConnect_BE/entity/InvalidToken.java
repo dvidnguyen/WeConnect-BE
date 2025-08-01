@@ -21,7 +21,7 @@ public class InvalidToken {
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+            createdAt = LocalDateTime.now();
         }
     }
 }

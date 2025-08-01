@@ -31,7 +31,7 @@ public class MessageReaction {
     @PrePersist
     public void prePersist() {
         if (reactedAt == null) {
-            reactedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+            reactedAt = LocalDateTime.now();
         }
     }
 }

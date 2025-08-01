@@ -29,7 +29,7 @@ public class BlockedUser {
     @PrePersist
     public void prePersist() {
         if (blockedAt == null) {
-            blockedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+            blockedAt = LocalDateTime.now();
         }
     }
 }

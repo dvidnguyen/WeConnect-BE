@@ -40,7 +40,7 @@ public class Message {
     @PrePersist
     public void prePersist() {
         if (sentAt == null) {
-            sentAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+            sentAt = LocalDateTime.now();
         }
     }
 }

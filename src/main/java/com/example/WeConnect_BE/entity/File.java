@@ -33,7 +33,7 @@ public class File {
     @PrePersist
     public void prePersist() {
         if (uploadedAt == null) {
-            uploadedAt = LocalDateTime.now();  // Tự động gán thời gian hiện tại nếu không có
+            uploadedAt = LocalDateTime.now();
         }
     }
 }
