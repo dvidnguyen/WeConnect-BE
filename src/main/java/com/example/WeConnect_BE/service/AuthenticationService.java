@@ -74,15 +74,17 @@ public class AuthenticationService {
     }
     public RegisterReponse register(RegisterRequest request){
         //check email exist
-        boolean valid = !userRepository.existsByEmail(request.getEmail());
-
+        boolean valid = userRepository.existsByEmail(request.getEmail());
+        if(valid){
+            throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
+        }
         User user = userMapper.toUser(request);
         user.setStatus(0);
         userRepository.save(user);
 
         return RegisterReponse.builder()
                 .email(request.getEmail())
-                .valid(valid)
+                .valid(true)
                 .build();
     }
 
