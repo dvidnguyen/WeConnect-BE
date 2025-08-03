@@ -6,12 +6,14 @@ import com.example.WeConnect_BE.dto.request.RegisterRequest;
 import com.example.WeConnect_BE.dto.response.AuthenticationResponse;
 import com.example.WeConnect_BE.dto.response.IntrospectResponse;
 import com.example.WeConnect_BE.dto.response.RegisterReponse;
+import com.example.WeConnect_BE.entity.InvalidToken;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.mapper.UserMapper;
 import com.example.WeConnect_BE.repository.InvalidTokenRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
+import com.example.WeConnect_BE.repository.UserSessionRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -21,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,6 +54,8 @@ public class AuthenticationService {
     @NonFinal
     @Value("${jwt.refresh-duration}")
     private long refreshDuration;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws AppException, JOSEException, ParseException {
         String token = request.getToken();
@@ -147,6 +152,38 @@ public class AuthenticationService {
         return signedJWT;
     }
 
+
+    public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
+        User user = userRepository.findByEmail(authenticationRequest.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash()); // So sánh mật khẩu thẳng
+        if (!authenticated) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String token = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(authenticated)
+                .build();
+    }
+
+    public void logout(String token) {
+        try {
+            SignedJWT signedJWT = verifyToken(token,false);
+
+            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+
+            invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
+
+            UserSessionRepository.deleteBySessionId(jwtId);
+
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+    }
 
 }
 

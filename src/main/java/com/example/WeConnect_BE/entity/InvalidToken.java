@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -12,16 +12,6 @@ import java.util.UUID;
 @Table(name = "INVALID_TOKEN")
 public class InvalidToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID token;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
+    private String token;
+    private Date createdAt;
 }
