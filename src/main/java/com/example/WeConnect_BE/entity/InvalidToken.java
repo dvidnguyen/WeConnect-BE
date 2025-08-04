@@ -2,13 +2,16 @@ package com.example.WeConnect_BE.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
+
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "INVALID_TOKEN")
 public class InvalidToken {
     @Id
