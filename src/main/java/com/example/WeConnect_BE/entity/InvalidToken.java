@@ -2,26 +2,19 @@ package com.example.WeConnect_BE.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "INVALID_TOKEN")
 public class InvalidToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID token;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
+    private String token;
+    private Date createdAt;
 }

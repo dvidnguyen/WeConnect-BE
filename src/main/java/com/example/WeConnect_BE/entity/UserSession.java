@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,19 +13,8 @@ import java.util.UUID;
 @Table(name = "USER_SESSION")
 public class UserSession {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    private String device;
-    private String ipAddress;
-
-    @Column(name = "login_at")
-    private LocalDateTime loginAt;
-
-    @Column(name = "logout_at")
-    private LocalDateTime logoutAt;
+    private String sessionId;
+    private String userId;
+    private Date createdAt;
+    private Date expiresAt;
 }
