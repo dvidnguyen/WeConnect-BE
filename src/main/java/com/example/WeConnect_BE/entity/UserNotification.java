@@ -1,31 +1,26 @@
 package com.example.WeConnect_BE.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import lombok.*;
 
 @Entity
+@Table(name = "user_notification")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "\"USER_NOTIFICATION\"")
+@Builder
 public class UserNotification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(length = 255)
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "notification_id")
+    @ManyToOne
+    @JoinColumn(name = "notification_id", referencedColumnName = "id")
     private Notification notification;
 
     @Column(name = "is_read")

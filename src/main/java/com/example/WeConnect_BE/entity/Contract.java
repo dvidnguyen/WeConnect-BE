@@ -28,6 +28,6 @@ public class Contract {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "addressee_user_id")
     private User addresseeUser;
-
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 }
