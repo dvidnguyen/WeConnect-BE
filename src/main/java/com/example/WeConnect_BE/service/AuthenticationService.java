@@ -33,10 +33,7 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -59,11 +56,12 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws AppException, JOSEException, ParseException {
         String token = request.getToken();
-
+        SignedJWT signJwt = null;
         try {
-            verifyToken(token, false);
+             signJwt = verifyToken(token, false);
         } catch (Exception e) {
             return IntrospectResponse.builder()
+                    .UserId(Objects.nonNull(signJwt) ? signJwt.getJWTClaimsSet().getSubject() : null)
                     .valid(false)
                     .build();
         }
