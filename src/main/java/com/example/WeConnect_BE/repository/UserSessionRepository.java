@@ -2,8 +2,7 @@ package com.example.WeConnect_BE.repository;
 
 import com.example.WeConnect_BE.entity.UserSession;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.UUID;
 
-public interface UserSessionRepository extends JpaRepository<UserSession, UUID> {
-    static void deleteBySessionId(String sessionId);
+public interface UserSessionRepository extends JpaRepository<UserSession, String> {
+    void deleteBySessionId(String sessionId);
 }

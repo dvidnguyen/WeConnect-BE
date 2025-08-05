@@ -44,6 +44,7 @@ import java.util.UUID;
 public class AuthenticationService {
     UserRepository userRepository;
     InvalidTokenRepository invalidTokenRepository;
+    UserSessionRepository userSessionRepository;
     UserMapper userMapper;
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -178,7 +179,7 @@ public class AuthenticationService {
 
             invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
 
-            UserSessionRepository.deleteBySessionId(jwtId);
+            userSessionRepository.deleteBySessionId(jwtId);
 
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
