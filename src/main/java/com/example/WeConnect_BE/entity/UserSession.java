@@ -23,6 +23,6 @@ public class UserSession {
     private UUID sessionId;
     private String userId;
     private Date createdAt;
-    private Date expiresAt;
+
 
 }

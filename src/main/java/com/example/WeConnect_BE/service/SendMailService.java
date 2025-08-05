@@ -28,7 +28,8 @@ public class SendMailService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired AuthenticationService authenticationService;
+    @Autowired
+    private AuthenticationService authenticationService;
 
     public void sendOtpEmail(String toEmail, String otp) {
 

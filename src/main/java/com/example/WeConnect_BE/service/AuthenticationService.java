@@ -40,6 +40,7 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository userRepository;
+    UserSessionRepository userSessionRepository;
     InvalidTokenRepository invalidTokenRepository;
     UserMapper userMapper;
     @NonFinal
@@ -169,19 +170,19 @@ public class AuthenticationService {
     }
 
     public void logout(String token) {
-//        try {
-//            SignedJWT signedJWT = verifyToken(token,false);
-//
-//            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-//
-//            invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
-//
-//            UserSessionRepository.deleteBySessionId(jwtId);
-//
-//        } catch (Exception e) {
-//            throw new AppException(ErrorCode.UNAUTHENTICATED);
-//        }
+        try {
+            SignedJWT signedJWT = verifyToken(token, false);
+            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+            InvalidToken invalidToken = new InvalidToken(jwtId, new Date());
+            invalidTokenRepository.save(invalidToken);
+            userRepository.deleteById(signedJWT.getJWTClaimsSet().getSubject());
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
     }
+
+
+
 
 }
 

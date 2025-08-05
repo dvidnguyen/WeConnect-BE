@@ -69,17 +69,28 @@ public class authenticationcontroller {
     @PostMapping("/logout")
     public ApiResponse<String> logout(@RequestHeader("Authorization") String token) {
         try {
+            // Gọi service logout
             authenticationService.logout(token);
 
+            // Trả về ApiResponse khi logout thành công
             return ApiResponse.<String>builder()
                     .code(200)
                     .message("Logout successful")
                     .build();
+
+        } catch (AppException e) {
+            // Nếu có lỗi, trả về thông báo lỗi
+            return ApiResponse.<String>builder()
+                    .code(401)
+                    .message("Logout failed: " + e.getMessage())
+                    .build();
         } catch (Exception e) {
+            // Nếu có lỗi không xác định
             return ApiResponse.<String>builder()
                     .code(500)
                     .message("Logout failed: " + e.getMessage())
                     .build();
         }
     }
+
 }
