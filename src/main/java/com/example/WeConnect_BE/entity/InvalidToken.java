@@ -12,7 +12,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "INVALID_TOKEN")
+@Table(name = "invalid_token")
 public class InvalidToken {
     @Id
     private String token;

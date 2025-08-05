@@ -42,7 +42,7 @@ public class SocketHandler {
             return;
         }
         UserSession userSession = UserSession.builder()
-                .sessionId(client.getSessionId())
+                .sessionId(client.getSessionId().toString())
                 .userId(response.getUserId())
                 .createdAt(Date.from(Instant.now()))
                 .build();

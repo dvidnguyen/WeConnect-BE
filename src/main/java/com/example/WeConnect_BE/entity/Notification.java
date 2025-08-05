@@ -1,29 +1,38 @@
 package com.example.WeConnect_BE.entity;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.*;
-import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.*;
+import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
+@Table(name = "notification")
 @Data
-@Table(name = "NOTIFICATION")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Notification {
+
     @Id
+    @Column(length = 255)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(length = 255)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String body;
+
+    @Column(length = 30)
     private String type;
-    @Column(name = "related_id")
+
+    @Column(name = "related_id", length = 36)
     private String relatedId;
 
-    private boolean isRead;
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
 
-    private LocalDateTime createdAt;
+    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<UserNotification> userNotifications;
 }

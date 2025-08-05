@@ -68,6 +68,7 @@ public class AuthenticationService {
         }
 
         return IntrospectResponse.builder()
+                .UserId(Objects.nonNull(signJwt) ? signJwt.getJWTClaimsSet().getSubject() : null)
                 .valid(true)
                 .build();
 
@@ -112,7 +113,7 @@ public class AuthenticationService {
     public String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getId())
+                .subject(user.getUser_id())
                 .issuer("duc.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
@@ -175,7 +176,7 @@ public class AuthenticationService {
             String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
             InvalidToken invalidToken = new InvalidToken(jwtId, new Date());
             invalidTokenRepository.save(invalidToken);
-            userRepository.deleteById(signedJWT.getJWTClaimsSet().getSubject());
+            userSessionRepository.deleteByUserId(signedJWT.getJWTClaimsSet().getSubject());
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }

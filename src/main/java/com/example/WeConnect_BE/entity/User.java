@@ -18,10 +18,11 @@ import java.util.UUID;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-
+    @Column(name = "user_id")
+    private String user_id;
+    @Column(name = "email")
     private String email;
-
+    @Column(name = "username")
     private String username;
 
     @Column(name = "password_hash")
@@ -29,11 +30,11 @@ public class User {
 
     @Column(name = "avatar_url")
     private String avatarUrl;
-
+    @Column(name = "status")
     private int status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Notification> notifications;
+    private List<UserNotification> userNotifications;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<VerifyCode> verifyCodes;
