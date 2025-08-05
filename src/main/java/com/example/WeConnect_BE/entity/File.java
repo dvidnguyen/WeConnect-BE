@@ -14,14 +14,17 @@ public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
+    @Column(name = "fileName")
     private String name;
-
+    @Column(name = "type")
     private String type;
 
-    private Long size;
-
+    @Column(name = "url")
     private String url;
+    @Column(name = "path")
+    private String path;
+    @Column(name = "md5checksum")
+    private String md5checksum;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")

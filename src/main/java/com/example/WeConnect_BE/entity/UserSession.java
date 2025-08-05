@@ -17,11 +17,14 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "USER_SESSION")
+@Table(name = "user_session")
 public class UserSession {
     @Id
-    private UUID sessionId;
+    @Column(name = "sessionId")
+    private String sessionId;
+    @Column(name = "user_id")
     private String userId;
+    @Column(name = "created_at")
     private Date createdAt;
 
 

@@ -14,11 +14,11 @@ public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-
+    @Column(name = "name")
     private String name;
-
+    @Column(name = "type")
     private String type;
-
+    @Column(name = "avatar")
     private String avatar;
 
 
