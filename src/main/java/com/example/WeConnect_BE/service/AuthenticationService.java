@@ -54,8 +54,7 @@ public class AuthenticationService {
     @NonFinal
     @Value("${jwt.refresh-duration}")
     private long refreshDuration;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+
 
     public IntrospectResponse introspect(IntrospectRequest request) throws AppException, JOSEException, ParseException {
         String token = request.getToken();
@@ -157,7 +156,7 @@ public class AuthenticationService {
         User user = userRepository.findByEmail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash()); // So sánh mật khẩu thẳng
+        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash());
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
@@ -166,20 +165,17 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(authenticated)
+                .authenticated(true)
                 .build();
     }
 
     public void logout(String token) {
         try {
-            SignedJWT signedJWT = verifyToken(token,false);
+            SignedJWT signedJWT = verifyToken(token, false);
 
             String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
 
             invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
-
-            UserSessionRepository.deleteBySessionId(jwtId);
-
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
