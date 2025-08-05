@@ -47,13 +47,14 @@ public class SocketHandler {
                 .createdAt(Date.from(Instant.now()))
                 .build();
         webSocketSessionService.create(userSession);
-
+        log.info("User session created: {}", userSession);
+        client.sendEvent("connected", "connected");
 
     }
     @OnDisconnect
     public void onDisconnected(SocketIOClient client) {
         log.info("Client disconnected: {}", client.getSessionId());
-
+        webSocketSessionService.delete(client.getSessionId().toString());
         // Gửi sự kiện về client báo ngắt kết nối (nếu client vẫn có thể nhận)
         client.sendEvent("disconnect", "Disconnected from Socket.IO server");
     }

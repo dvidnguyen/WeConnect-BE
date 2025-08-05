@@ -16,4 +16,7 @@ public class WebSocketSessionService {
     public void create(UserSession userSession) {
         userSessionRepository.save(userSession);
     }
+    public void delete(String sessionId) {
+        userSessionRepository.deleteById(sessionId);
+    }
 }

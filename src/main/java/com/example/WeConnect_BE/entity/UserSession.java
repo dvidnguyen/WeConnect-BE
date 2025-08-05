@@ -19,12 +19,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "USER_SESSION")
 public class UserSession {
-
-
     @Id
+    private UUID sessionId;
     private String userId;
     private Date createdAt;
     private Date expiresAt;
-    @Column(name = "sessionId")
-    private UUID sessionId;
+
 }

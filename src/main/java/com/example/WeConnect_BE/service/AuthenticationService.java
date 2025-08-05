@@ -169,18 +169,18 @@ public class AuthenticationService {
     }
 
     public void logout(String token) {
-        try {
-            SignedJWT signedJWT = verifyToken(token,false);
-
-            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-
-            invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
-
-            UserSessionRepository.deleteBySessionId(jwtId);
-
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
+//        try {
+//            SignedJWT signedJWT = verifyToken(token,false);
+//
+//            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+//
+//            invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
+//
+//            UserSessionRepository.deleteBySessionId(jwtId);
+//
+//        } catch (Exception e) {
+//            throw new AppException(ErrorCode.UNAUTHENTICATED);
+//        }
     }
 
 }
