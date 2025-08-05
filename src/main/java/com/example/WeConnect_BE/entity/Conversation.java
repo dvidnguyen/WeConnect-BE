@@ -17,6 +17,12 @@ public class Conversation {
 
     private String name;
 
+    private String type;
+
+    private String avatar;
+
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

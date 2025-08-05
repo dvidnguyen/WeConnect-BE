@@ -8,39 +8,31 @@ spring:
     url: jdbc:mysql://localhost:3306/weconnectdb
     username: root
     password: root
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: nguyentrongduc447@gmail.com
-    password: xlnmpqpwbfggibue
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-    protocol: smtp
-    default-encoding: UTF-8
-    test-connection: false
-    debug: true
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
   sql:
     init:
       mode: never
+
   servlet:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
+
 app:
   file:
     storage-dir: D:/upload
     dowload-prefix: http://localhost:8080/identity/media/
-  cors-origin: http://localhost:3000
 
+  cors-origin: http://localhost:5173
 jwt:
   valid-duration: 3600
   refresh-duration: 360000

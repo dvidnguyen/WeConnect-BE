@@ -33,16 +33,14 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository userRepository;
+    UserSessionRepository userSessionRepository;
     InvalidTokenRepository invalidTokenRepository;
     UserMapper userMapper;
     @NonFinal
@@ -54,15 +52,17 @@ public class AuthenticationService {
     @NonFinal
     @Value("${jwt.refresh-duration}")
     private long refreshDuration;
-
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws AppException, JOSEException, ParseException {
         String token = request.getToken();
-
+        SignedJWT signJwt = null;
         try {
-            verifyToken(token, false);
+             signJwt = verifyToken(token, false);
         } catch (Exception e) {
             return IntrospectResponse.builder()
+                    .UserId(Objects.nonNull(signJwt) ? signJwt.getJWTClaimsSet().getSubject() : null)
                     .valid(false)
                     .build();
         }
@@ -156,7 +156,7 @@ public class AuthenticationService {
         User user = userRepository.findByEmail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash());
+        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash()); // So sánh mật khẩu thẳng
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
@@ -165,21 +165,24 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(true)
+                .authenticated(authenticated)
                 .build();
     }
 
     public void logout(String token) {
         try {
             SignedJWT signedJWT = verifyToken(token, false);
-
             String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-
-            invalidTokenRepository.save(new InvalidToken(jwtId, new Date()));
+            InvalidToken invalidToken = new InvalidToken(jwtId, new Date());
+            invalidTokenRepository.save(invalidToken);
+            userRepository.deleteById(signedJWT.getJWTClaimsSet().getSubject());
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
     }
+
+
+
 
 }
 

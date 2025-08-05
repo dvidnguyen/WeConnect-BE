@@ -7,6 +7,7 @@ import com.example.WeConnect_BE.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -25,6 +26,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     private String signingKey;
 
     @Autowired
+    @Lazy
     private AuthenticationService authenticationService;
 
     NimbusJwtDecoder nimbusJwtDecoder = null;
