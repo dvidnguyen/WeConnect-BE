@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "\"CONTRACT\"")
-public class Contract {
+public class Contact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

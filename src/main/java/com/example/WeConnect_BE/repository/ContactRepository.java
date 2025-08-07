@@ -1,9 +1,10 @@
 package com.example.WeConnect_BE.repository;
 
-import com.example.WeConnect_BE.entity.Member;
+import com.example.WeConnect_BE.entity.Contact;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 @Repository
-public interface MemberRepository extends JpaRepository<Member, UUID> {}
+public interface ContactRepository extends JpaRepository<Contact, UUID> {
+}
