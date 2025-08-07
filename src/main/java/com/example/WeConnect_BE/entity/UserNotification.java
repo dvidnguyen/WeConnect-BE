@@ -13,6 +13,7 @@ public class UserNotification {
 
     @Id
     @Column(length = 255)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne
@@ -24,5 +25,5 @@ public class UserNotification {
     private Notification notification;
 
     @Column(name = "is_read")
-    private boolean isRead;
+    private int isRead;
 }

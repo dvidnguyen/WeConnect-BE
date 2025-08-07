@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.entity;
 
+import com.example.WeConnect_BE.Util.TypeNotification;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.List;
 public class Notification {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 255)
     private String id;
 
@@ -22,9 +24,9 @@ public class Notification {
 
     @Column(columnDefinition = "TEXT")
     private String body;
-
-    @Column(length = 30)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private TypeNotification type;
 
     @Column(name = "related_id", length = 36)
     private String relatedId;

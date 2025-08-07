@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "VERIFY_CODE")
+@Table(name = "verify_code")
 public class VerifyCode {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

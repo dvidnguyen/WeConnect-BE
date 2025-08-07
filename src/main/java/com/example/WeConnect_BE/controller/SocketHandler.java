@@ -30,6 +30,13 @@ public class SocketHandler {
     SocketIOServer socketIOServer;
     AuthenticationService authenticationService;
     WebSocketSessionService webSocketSessionService;
+    @PostConstruct
+    public void init() {
+        socketIOServer.addListeners(this);
+        socketIOServer.start();
+
+        log.info("SocketIOServer started");
+    }
     @OnConnect
     public void onConnected(SocketIOClient client) throws ParseException, JOSEException {
         String token = client.getHandshakeData().getSingleUrlParam("token");
@@ -47,24 +54,21 @@ public class SocketHandler {
                 .createdAt(Date.from(Instant.now()))
                 .build();
         webSocketSessionService.create(userSession);
-        log.info("User session created: {}", userSession);
+
         client.sendEvent("connected", "connected");
+        log.info("User session created: {}", userSession);
 
     }
     @OnDisconnect
     public void onDisconnected(SocketIOClient client) {
-        log.info("Client disconnected: {}", client.getSessionId());
+
         webSocketSessionService.delete(client.getSessionId().toString());
         // Gửi sự kiện về client báo ngắt kết nối (nếu client vẫn có thể nhận)
         client.sendEvent("disconnect", "Disconnected from Socket.IO server");
+        log.info("Client disconnected: {}", client.getSessionId());
     }
 
-    @PostConstruct
-    public void init() {
-        socketIOServer.start();
-        socketIOServer.addListeners(this);
-        log.info("SocketIOServer started");
-    }
+
 
     @PreDestroy
     public void destroy() {

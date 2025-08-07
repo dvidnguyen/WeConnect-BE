@@ -2,15 +2,18 @@ package com.example.WeConnect_BE.service;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.example.WeConnect_BE.Util.TypeNotification;
 import com.example.WeConnect_BE.dto.request.FriendRequest;
 import com.example.WeConnect_BE.dto.response.FriendPendingResponse;
 import com.example.WeConnect_BE.dto.response.FriendResponse;
 import com.example.WeConnect_BE.dto.response.NotificationResponse;
 import com.example.WeConnect_BE.entity.Friend;
 import com.example.WeConnect_BE.entity.User;
+import com.example.WeConnect_BE.entity.UserSession;
 import com.example.WeConnect_BE.repository.ContactRepository;
 import com.example.WeConnect_BE.repository.FriendRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
+import com.example.WeConnect_BE.repository.UserSessionRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SendRequestFriendService {
     UserRepository userRepository;
+    UserSessionRepository userSessionRepository;
     FriendRepository friendRepository;
     NotificationService notificationService;
     ContactRepository contractRepository;
@@ -50,21 +54,21 @@ public class SendRequestFriendService {
                 .build();
         friendRepository.save(friend);
 
-        // 3. Tạo thông báo
-        SocketIOClient client = socketIOServer.getClient(UUID.fromString(request.getTo()));
-        notificationService.sendNotification(client,"friend-request", NotificationResponse
+        // 3. Tạo thông báous
+        UserSession userSession =  userSessionRepository.findByUserId(request.getTo());
+        SocketIOClient client = socketIOServer.getClient(UUID.fromString(userSession.getSessionId()));
+        notificationService.sendNotification(client,"friend", NotificationResponse
                 .builder()
                         .id(friend.getId())
                         .body(request.getBody())
                         .title(requester.get().getUsername())
                         .type("FRIEND")
                         .isRead(false)
-                        .senderId(requester.get().getUser_id())
+                        .senderId(requester.get().getUserId())
                         .senderName(requester.get().getUsername())
                         .senderAvatarUrl(requester.get().getAvatarUrl())
                         .createdAt(LocalDateTime.now())
-                .build()
-
+                .build(), TypeNotification.friend_request
         );
 
         return FriendResponse.builder()
@@ -92,7 +96,8 @@ public class SendRequestFriendService {
 
         // Gửi thông báo cho requester
         Optional<User> addressee = userRepository.findById(addresseeId);
-        SocketIOClient client = socketIOServer.getClient(UUID.fromString(requesterId));
+        String sesssionId = userSessionRepository.findByUserId(addressee.get().getUserId()).getSessionId();
+        SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
 
         notificationService.sendNotification(client, "friend-accepted", NotificationResponse.builder()
                 .id(friend.getId())
@@ -100,12 +105,12 @@ public class SendRequestFriendService {
                 .title(addressee.get().getUsername())
                 .type("FRIEND")
                 .isRead(false)
-                .senderId(addressee.get().getUser_id())
+                .senderId(addressee.get().getUserId())
                 .senderName(addressee.get().getUsername())
                 .senderAvatarUrl(addressee.get().getAvatarUrl())
                 .relatedId(friend.getId())
                 .createdAt(LocalDateTime.now())
-                .build());
+                .build(), TypeNotification.friend_request);
 
         return FriendResponse.builder().success(true).build();
     }
@@ -135,23 +140,23 @@ public class SendRequestFriendService {
                 .title(addressee.get().getUsername())
                 .type("FRIEND")
                 .isRead(false)
-                .senderId(addressee.get().getUser_id())
+                .senderId(addressee.get().getUserId())
                 .senderName(addressee.get().getUsername())
                 .senderAvatarUrl(addressee.get().getAvatarUrl())
                 .relatedId(friend.getId())
                 .createdAt(LocalDateTime.now())
-                .build());
+                .build(), TypeNotification.friend_request);
 
         return FriendResponse.builder().success(true).build();
     }
 
     public List<FriendPendingResponse> getFriends(String userId) {
         List<Friend> pendingRequests = friendRepository
-                .findByAddressee_IdAndStatus(userId, Friend.FriendStatus.PENDING);
+                .findByAddressee_UserIdAndStatus(userId, Friend.FriendStatus.PENDING);
 
         return pendingRequests.stream()
                 .map(friend -> FriendPendingResponse.builder()
-                        .requesterId(friend.getRequester().getUser_id())
+                        .requesterId(friend.getRequester().getUserId())
                         .requesterAvatar(friend.getRequester().getAvatarUrl())
                         .requesterName(friend.getRequester().getUsername())
                         .sentAt(friend.getCreatedAt())

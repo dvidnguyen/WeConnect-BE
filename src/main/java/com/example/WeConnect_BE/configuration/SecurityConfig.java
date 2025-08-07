@@ -20,6 +20,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Locale;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -28,13 +30,16 @@ public class SecurityConfig {
             "auth/introspect",
             "auth/regis",
             "api/otp/send",
-            "api/otp/verify"
+            "api/otp/verify",
+            "friend-request/accepted",
+            "friend-request/send"
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
-            "auth/introspect"
+            "auth/introspect",
+            "friend-request/{id}",
+            "/api/users/test"
     };
     @Autowired
-    @Lazy
     private CustomJwtDecoder customJwtDecoder;
     @Value("${app.cors-origin}")
     private String corsOrigin;
