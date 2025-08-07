@@ -72,7 +72,6 @@ public class AuthenticationService {
                 .valid(true)
                 .build();
 
-
     }
     public List<User> getUser() throws AppException, JOSEException, ParseException {
         return userRepository.findAll();

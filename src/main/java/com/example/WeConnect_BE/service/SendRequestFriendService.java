@@ -10,6 +10,7 @@ import com.example.WeConnect_BE.dto.response.NotificationResponse;
 import com.example.WeConnect_BE.entity.Friend;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.entity.UserSession;
+import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.repository.ContactRepository;
 import com.example.WeConnect_BE.repository.FriendRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
@@ -53,23 +54,26 @@ public class SendRequestFriendService {
                 .createdAt(LocalDateTime.now())
                 .build();
         friendRepository.save(friend);
+        try {
+            UserSession userSession =  userSessionRepository.findByUserId(request.getTo());
+            SocketIOClient client = socketIOServer.getClient(UUID.fromString(userSession.getSessionId()));
+            notificationService.sendNotification(client,"friend", NotificationResponse
+                    .builder()
+                    .id(friend.getId())
+                    .body(request.getBody())
+                    .title(requester.get().getUsername())
+                    .type("FRIEND")
+                    .isRead(false)
+                    .senderId(requester.get().getUserId())
+                    .senderName(requester.get().getUsername())
+                    .senderAvatarUrl(requester.get().getAvatarUrl())
+                    .createdAt(LocalDateTime.now())
+                    .build(), TypeNotification.friend_request
+            );
+        } catch (Exception e) {
 
+        }
         // 3. Tạo thông báous
-        UserSession userSession =  userSessionRepository.findByUserId(request.getTo());
-        SocketIOClient client = socketIOServer.getClient(UUID.fromString(userSession.getSessionId()));
-        notificationService.sendNotification(client,"friend", NotificationResponse
-                .builder()
-                        .id(friend.getId())
-                        .body(request.getBody())
-                        .title(requester.get().getUsername())
-                        .type("FRIEND")
-                        .isRead(false)
-                        .senderId(requester.get().getUserId())
-                        .senderName(requester.get().getUsername())
-                        .senderAvatarUrl(requester.get().getAvatarUrl())
-                        .createdAt(LocalDateTime.now())
-                .build(), TypeNotification.friend_request
-        );
 
         return FriendResponse.builder()
                 .success(true)
@@ -95,22 +99,27 @@ public class SendRequestFriendService {
 
 
         // Gửi thông báo cho requester
-        Optional<User> addressee = userRepository.findById(addresseeId);
-        String sesssionId = userSessionRepository.findByUserId(addressee.get().getUserId()).getSessionId();
-        SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
+        Optional<User> requester = userRepository.findById(requesterId);
+        try {
+            String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
+            SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
+            Optional<User> addressee = userRepository.findById(addresseeId);
+            notificationService.sendNotification(client, "friend-accepted", NotificationResponse.builder()
+                    .id(friend.getId())
+                    .body("Friend request accepted")
+                    .title(addressee.get().getUsername())
+                    .type("FRIEND")
+                    .isRead(false)
+                    .senderId(addressee.get().getUserId())
+                    .senderName(addressee.get().getUsername())
+                    .senderAvatarUrl(addressee.get().getAvatarUrl())
+                    .relatedId(friend.getId())
+                    .createdAt(LocalDateTime.now())
+                    .build(), TypeNotification.friend_request);
+        } catch (Exception e) {
 
-        notificationService.sendNotification(client, "friend-accepted", NotificationResponse.builder()
-                .id(friend.getId())
-                .body("Friend request accepted")
-                .title(addressee.get().getUsername())
-                .type("FRIEND")
-                .isRead(false)
-                .senderId(addressee.get().getUserId())
-                .senderName(addressee.get().getUsername())
-                .senderAvatarUrl(addressee.get().getAvatarUrl())
-                .relatedId(friend.getId())
-                .createdAt(LocalDateTime.now())
-                .build(), TypeNotification.friend_request);
+        }
+
 
         return FriendResponse.builder().success(true).build();
     }
@@ -131,21 +140,27 @@ public class SendRequestFriendService {
         friendRepository.save(friend);
 
         // Gửi thông báo cho requester
-        Optional<User> addressee = userRepository.findById(addresseeId);
-        SocketIOClient client = socketIOServer.getClient(UUID.fromString(requesterId));
+        try {
+            Optional<User> requester = userRepository.findById(requesterId);
+            String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
+            SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
+            Optional<User> addressee = userRepository.findById(addresseeId);
+            notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
+                    .id(friend.getId())
+                    .body("Friend request rejected")
+                    .title(addressee.get().getUsername())
+                    .type("FRIEND")
+                    .isRead(false)
+                    .senderId(addressee.get().getUserId())
+                    .senderName(addressee.get().getUsername())
+                    .senderAvatarUrl(addressee.get().getAvatarUrl())
+                    .relatedId(friend.getId())
+                    .createdAt(LocalDateTime.now())
+                    .build(), TypeNotification.friend_request);
+        } catch (Exception e) {
 
-        notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
-                .id(friend.getId())
-                .body("Friend request rejected")
-                .title(addressee.get().getUsername())
-                .type("FRIEND")
-                .isRead(false)
-                .senderId(addressee.get().getUserId())
-                .senderName(addressee.get().getUsername())
-                .senderAvatarUrl(addressee.get().getAvatarUrl())
-                .relatedId(friend.getId())
-                .createdAt(LocalDateTime.now())
-                .build(), TypeNotification.friend_request);
+        }
+
 
         return FriendResponse.builder().success(true).build();
     }

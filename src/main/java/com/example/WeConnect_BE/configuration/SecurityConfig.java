@@ -32,7 +32,8 @@ public class SecurityConfig {
             "api/otp/send",
             "api/otp/verify",
             "friend-request/accepted",
-            "friend-request/send"
+            "friend-request/send",
+            "friend-request/rejected"
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
             "auth/introspect",
