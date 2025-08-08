@@ -41,6 +41,7 @@ CREATE TABLE friend (
                         requester_user_id CHAR(255),
                         addressee_user_id CHAR(255),
                         status VARCHAR(20) CHECK (status IN ('pending', 'accepted', 'rejected', 'blocked')),
+                        body TEXT,
                         created_at DATETIME,
                         updated_at DATETIME,
                         FOREIGN KEY (requester_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -130,7 +131,7 @@ CREATE TABLE user_session (
 
 -- Bảng token không hợp lệ
 CREATE TABLE invalid_token (
-                               token CHAR(36) PRIMARY KEY,
+                               token CHAR(255) PRIMARY KEY,
                                created_at DATETIME,
                                expires_at DATETIME
 );

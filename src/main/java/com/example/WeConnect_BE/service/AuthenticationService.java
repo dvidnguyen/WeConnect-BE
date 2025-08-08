@@ -1,8 +1,6 @@
 package com.example.WeConnect_BE.service;
 
-import com.example.WeConnect_BE.dto.request.AuthenticationRequest;
-import com.example.WeConnect_BE.dto.request.IntrospectRequest;
-import com.example.WeConnect_BE.dto.request.RegisterRequest;
+import com.example.WeConnect_BE.dto.request.*;
 import com.example.WeConnect_BE.dto.response.AuthenticationResponse;
 import com.example.WeConnect_BE.dto.response.IntrospectResponse;
 import com.example.WeConnect_BE.dto.response.RegisterReponse;
@@ -25,6 +23,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -77,37 +76,31 @@ public class AuthenticationService {
         return userRepository.findAll();
     }
     public RegisterReponse register(RegisterRequest request){
-        //check email exist
-        boolean valid = userRepository.existsByEmail(request.getEmail());
-        if(valid){
+        // 1. Check email tồn tại
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
+
+        // 2. Map request -> entity
         User user = userMapper.toUser(request);
+
+        // 3. Hash password
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        user.setPasswordHash(encodedPassword);
+
+        // 4. Set status mặc định
         user.setStatus(0);
+
+        // 5. Lưu user
         userRepository.save(user);
 
+        // 6. Trả về response
         return RegisterReponse.builder()
-                .email(request.getEmail())
+                .email(user.getEmail())
                 .valid(true)
                 .build();
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
-        var user = userRepository.findByEmail(authenticationRequest.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
-
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        boolean authenticated =  passwordEncoder.matches(authenticationRequest.getPassword(), user.getPasswordHash());
-        if(!authenticated){
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
-        String token = generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(authenticated)
-                .build();
-    }
 
     public String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
@@ -133,7 +126,7 @@ public class AuthenticationService {
     }
 
 
-    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+    private SignedJWT   verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(KEY_SIGNTURE.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -153,32 +146,50 @@ public class AuthenticationService {
 
 
     public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
-        User user = userRepository.findByEmail(authenticationRequest.getEmail())
+        var user = userRepository.findByEmail(authenticationRequest.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        boolean authenticated = authenticationRequest.getPassword().equals(user.getPasswordHash()); // So sánh mật khẩu thẳng
-        if (!authenticated) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        boolean authenticated =  passwordEncoder.matches(authenticationRequest.getPassword(), user.getPasswordHash());
+        if(!authenticated){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         String token = generateToken(user);
-
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(authenticated)
                 .build();
     }
 
-    public void logout(String token) {
-        try {
-            SignedJWT signedJWT = verifyToken(token, false);
-            String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-            InvalidToken invalidToken = new InvalidToken(jwtId, new Date());
-            invalidTokenRepository.save(invalidToken);
-            userSessionRepository.deleteByUserId(signedJWT.getJWTClaimsSet().getSubject());
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(), false);
+
+        String jti = signedJWT.getJWTClaimsSet().getJWTID();
+        InvalidToken invalidatedToken = InvalidToken.builder()
+                .token(jti)
+                .createdAt(new Date())
+                .build();
+        invalidTokenRepository.save(invalidatedToken);
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest req) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(req.getToken(), true);
+        String jti = signedJWT.getJWTClaimsSet().getJWTID();
+        InvalidToken invalidatedToken = InvalidToken.builder()
+                .token(jti)
+                .createdAt(new Date())
+                .build();
+        invalidTokenRepository.save(invalidatedToken);
+
+        var user = userRepository.findById(signedJWT.getJWTClaimsSet().getSubject()).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTS)
+        );
+        String token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
     }
 
 

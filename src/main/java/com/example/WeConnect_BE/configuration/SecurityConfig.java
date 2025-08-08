@@ -31,7 +31,8 @@ public class SecurityConfig {
             "auth/regis",
             "api/otp/send",
             "api/otp/verify",
-
+            "auth/login",
+            "auth/logout",
 //            "friend-request/accepted",
 //            "friend-request/send",
 //            "friend-request/rejected"

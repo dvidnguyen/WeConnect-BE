@@ -2,6 +2,8 @@ package com.example.WeConnect_BE.controller;
 
 import com.example.WeConnect_BE.dto.ApiResponse;
 import com.example.WeConnect_BE.dto.request.AuthenticationRequest;
+import com.example.WeConnect_BE.dto.request.LogoutRequest;
+import com.example.WeConnect_BE.dto.request.RefreshTokenRequest;
 import com.example.WeConnect_BE.dto.request.RegisterRequest;
 import com.example.WeConnect_BE.dto.response.AuthenticationResponse;
 import com.example.WeConnect_BE.dto.response.RegisterReponse;
@@ -47,31 +49,31 @@ public class authenticationcontroller {
     }
 
     @PostMapping("/login")
-    public ApiResponse<String> login(@RequestBody AuthenticationRequest authenticationRequest) {
-        try {
+    public ApiResponse<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) {
             AuthenticationResponse response = authenticationService.login(authenticationRequest);
 
-            return ApiResponse.<String>builder()
+            return ApiResponse.<AuthenticationResponse>builder()
                     .code(200)
-                    .message("Login successful")
-                    .result(response.getToken())
+                    .message("successful")
+                    .result(response)
                     .build();
-        } catch (Exception e) {
-            return ApiResponse.<String>builder()
-                    .code(401)
-                    .message("Login failed: " + e.getMessage())
-                    .build();
-        }
+
+    }
+    @PostMapping("/refresh")
+    public ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshTokenRequest req) throws ParseException, JOSEException {
+        AuthenticationResponse result = authenticationService.refreshToken(req);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
     }
 
 
-
     @PostMapping("/logout")
-    public ApiResponse<String> logout(@RequestHeader("Authorization") String token) {
+    public ApiResponse<String> logout(@RequestBody LogoutRequest req) throws ParseException, JOSEException {
         try {
             // Gọi service logout
-            authenticationService.logout(token);
 
+            authenticationService.logout(req);
             // Trả về ApiResponse khi logout thành công
             return ApiResponse.<String>builder()
                     .code(200)
@@ -82,12 +84,6 @@ public class authenticationcontroller {
             // Nếu có lỗi, trả về thông báo lỗi
             return ApiResponse.<String>builder()
                     .code(401)
-                    .message("Logout failed: " + e.getMessage())
-                    .build();
-        } catch (Exception e) {
-            // Nếu có lỗi không xác định
-            return ApiResponse.<String>builder()
-                    .code(500)
                     .message("Logout failed: " + e.getMessage())
                     .build();
         }
