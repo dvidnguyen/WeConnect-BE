@@ -1,6 +1,7 @@
 package com.example.WeConnect_BE.controller;
 
 import com.example.WeConnect_BE.dto.ApiResponse;
+import com.example.WeConnect_BE.dto.request.FriendReactionRequest;
 import com.example.WeConnect_BE.dto.request.FriendRequest;
 import com.example.WeConnect_BE.dto.response.FriendPendingResponse;
 import com.example.WeConnect_BE.dto.response.FriendResponse;
@@ -31,23 +32,23 @@ public class SendRequestFriendController {
                 .build();
     }
 
-    @GetMapping("/{id}")
-    public ApiResponse<List<FriendPendingResponse>> getFriendRequest(@PathVariable("id") String userId) {
+    @GetMapping
+    public ApiResponse<List<FriendPendingResponse>> getFriendRequest() {
         return ApiResponse.<List<FriendPendingResponse>>builder()
-                .result(sendRequestFriendService.getFriends(userId))
+                .result(sendRequestFriendService.getFriends())
                 .build();
     }
 
     @PostMapping("/accepted")
-    public ApiResponse<FriendResponse> acceptFriendRequest(@RequestBody FriendRequest friendRequest) {
+    public ApiResponse<FriendResponse> acceptFriendRequest(@RequestBody FriendReactionRequest friendRequest) {
         return ApiResponse.<FriendResponse>builder()
-                .result(sendRequestFriendService.acceptFriendRequest(friendRequest.getFrom(), friendRequest.getTo()))
+                .result(sendRequestFriendService.acceptFriendRequest(friendRequest))
                 .build();
     }
     @PostMapping("/rejected")
-    public ApiResponse<FriendResponse> rejectFriendRequest(@RequestBody FriendRequest friendRequest) {
+    public ApiResponse<FriendResponse> rejectFriendRequest(@RequestBody FriendReactionRequest friendRequest) {
         return ApiResponse.<FriendResponse>builder()
-                .result(sendRequestFriendService.rejectFriendRequest(friendRequest.getFrom(), friendRequest.getTo()))
+                .result(sendRequestFriendService.rejectFriendRequest(friendRequest))
                 .build();
     }
 }

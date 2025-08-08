@@ -3,6 +3,7 @@ package com.example.WeConnect_BE.service;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.example.WeConnect_BE.Util.TypeNotification;
+import com.example.WeConnect_BE.dto.request.FriendReactionRequest;
 import com.example.WeConnect_BE.dto.request.FriendRequest;
 import com.example.WeConnect_BE.dto.response.FriendPendingResponse;
 import com.example.WeConnect_BE.dto.response.FriendResponse;
@@ -12,6 +13,7 @@ import com.example.WeConnect_BE.entity.Friend;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.entity.UserSession;
 import com.example.WeConnect_BE.exception.AppException;
+import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.mapper.FriendMapper;
 import com.example.WeConnect_BE.repository.ContactRepository;
 import com.example.WeConnect_BE.repository.FriendRepository;
@@ -22,6 +24,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,12 +49,17 @@ public class SendRequestFriendService {
     SocketIOServer socketIOServer;
 
     public FriendResponse sendFriendRequest(FriendRequest request) {
+        JwtAuthenticationToken authentication =
+                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+
+        Jwt jwt = authentication.getToken();
+        String from = jwt.getSubject(); // sub trong JWT
         // 1. Kiểm tra đã có yêu cầu chưa
-        boolean exists = friendRepository.existsByRequesterUserIdAndAddresseeUserId(request.getFrom(), request.getTo());
+        boolean exists = friendRepository.existsByRequesterUserIdAndAddresseeUserId(from, request.getTo());
         if (exists) return FriendResponse.builder()
                 .success(true)
                 .build();
-        Optional<User> requester = userRepository.findById(request.getFrom());
+        Optional<User> requester = userRepository.findById(from);
         Optional<User> addressee = userRepository.findById(request.getTo());
         // 2. Tạo bản ghi friend (pending)
         Friend friend = Friend.builder()
@@ -85,36 +95,41 @@ public class SendRequestFriendService {
                 .build();
     }
     @Transactional
-    public FriendResponse acceptFriendRequest(String requesterId, String addresseeId) {
-// 1) Lock hàng Friend để tránh 2 request accept cùng lúc
-        Friend friend = friendRepository.lockByPair(requesterId, addresseeId)
+    public FriendResponse acceptFriendRequest(FriendReactionRequest request) {
+        var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getToken().getSubject();
+
+        // 1) Lock friend by id
+        Friend friend = friendRepository.lockById(request.getId())
                 .orElseThrow(() -> new RuntimeException("Friend request not found"));
 
-        // Idempotent: nếu đã ACCEPTED, vẫn đảm bảo Contact tồn tại rồi xóa Friend (nếu yêu cầu là xóa)
-        if (friend.getStatus() == Friend.FriendStatus.ACCEPTED) {
-            upsertContactNormalized(friend);
-            friendRepository.delete(friend); // nếu bạn muốn xóa record friend sau khi đã là bạn
-            return FriendResponse.builder().success(true).build();
+        // 1.1) chỉ addressee được accept
+        if (!friend.getAddressee().getUserId().equals(currentUserId)) {
+            return  FriendResponse.builder()
+                    .success(false)
+                    .build();
         }
 
-        // 2) Cập nhật trạng thái -> ACCEPTED
-        friend.setStatus(Friend.FriendStatus.ACCEPTED);
-        friend.setUpdatedAt(LocalDateTime.now());
-        friendRepository.saveAndFlush(friend); // flush sớm giữ thứ tự thao tác
+        // 2) Set ACCEPTED (idempotent)
+        if (friend.getStatus() != Friend.FriendStatus.ACCEPTED) {
+            friend.setStatus(Friend.FriendStatus.ACCEPTED);
+            friend.setUpdatedAt(LocalDateTime.now());
+            friendRepository.saveAndFlush(friend); // giữ thứ tự
+        }
 
-        // 3) Tạo Contact nếu chưa có (idempotent + normalized)
+        // 3) Upsert Contact (chuẩn hoá cặp a<b)
         upsertContactNormalized(friend);
 
         // 4) Xoá friend request
         friendRepository.delete(friend);
 
-        // Gửi thông báo nếu cần
-        // ... code gửi thông báo ...
+        // (tùy) gửi notify cho requester
+
         try {
-            Optional<User> requester = userRepository.findById(requesterId);
+            Optional<User> requester = userRepository.findById(friend.getRequester().getUserId());
             String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
             SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
-            Optional<User> addressee = userRepository.findById(addresseeId);
+            Optional<User> addressee = userRepository.findById(currentUserId);
             notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
                     .id(friend.getId())
                     .body("Friend request rejected")
@@ -160,53 +175,76 @@ public class SendRequestFriendService {
         }
     }
 
-    public FriendResponse rejectFriendRequest(String requesterId, String addresseeId) {
-        Optional<Friend> optionalFriend = friendRepository
-                .findByRequesterUserIdAndAddresseeUserId(requesterId, addresseeId);
+    public FriendResponse rejectFriendRequest(FriendReactionRequest request) {
+        // 1) Lấy current user từ JWT
+        var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = auth.getToken().getSubject();
 
-        if (optionalFriend.isEmpty()) {
+        // 2) Khóa bản ghi Friend theo id để tránh 2 luồng xử lý cùng lúc
+        Friend friend = friendRepository.lockById(request.getId())
+                .orElseThrow(() ->  new AppException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
+
+        // 3) Chỉ addressee mới được reject
+        //    (đổi getId() -> getUserId() nếu entity User của bạn đặt field là userId)
+        if (!friend.getAddressee().getUserId().equals(currentUserId)) {
             return FriendResponse.builder().success(false).build();
         }
 
-        Friend friend = optionalFriend.get();
-
-        // Cập nhật trạng thái
-        friend.setStatus(Friend.FriendStatus.REJECTED);
-        friend.setUpdatedAt(LocalDateTime.now());
-        friendRepository.save(friend);
-
-        // Gửi thông báo cho requester
-        try {
-            Optional<User> requester = userRepository.findById(requesterId);
-            String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
-            SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
-            Optional<User> addressee = userRepository.findById(addresseeId);
-            notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
-                    .id(friend.getId())
-                    .body("Friend request rejected")
-                    .title(addressee.get().getUsername())
-                    .type("FRIEND")
-                    .isRead(false)
-                    .senderId(addressee.get().getUserId())
-                    .senderName(addressee.get().getUsername())
-                    .senderAvatarUrl(addressee.get().getAvatarUrl())
-                    .relatedId(friend.getId())
-                    .createdAt(LocalDateTime.now())
-                    .build(), TypeNotification.friend_request);
-        } catch (Exception e) {
-
+        // 4) Set trạng thái REJECTED (idempotent)
+        if (friend.getStatus() != Friend.FriendStatus.REJECTED) {
+            friend.setStatus(Friend.FriendStatus.REJECTED);
+            friend.setUpdatedAt(LocalDateTime.now());
+            friendRepository.saveAndFlush(friend);
         }
 
+        // 5) Xóa yêu cầu (tuỳ yêu cầu nghiệp vụ – thường reject là xoá)
+        friendRepository.delete(friend);
+
+        // 6) Gửi thông báo cho requester (người nhận notify)
+        try {
+            User requester = friend.getRequester();
+            User addressee = friend.getAddressee();
+
+            // lấy session người nhận notify
+           UserSession userSession =  userSessionRepository.findByUserId(requester.getUserId());
+            String sid = userSession.getSessionId();
+            // kiểu UUID
+                SocketIOClient client = socketIOServer.getClient(UUID.fromString(sid));// kiểu UUID nếu bạn mapping như vậy
+                        notificationService.sendNotification(
+                                client,
+                                "friend-rejected",
+                                NotificationResponse.builder()
+                                        .id(friend.getId())
+                                        .title(addressee.getUsername())
+                                        .body( "Friend request rejected")
+                                        .type("FRIEND")
+                                        .isRead(false)
+                                        .senderId(addressee.getUserId())
+                                        .senderName(addressee.getUsername())
+                                        .senderAvatarUrl(addressee.getAvatarUrl())
+                                        .relatedId(friend.getId())
+                                        .createdAt(LocalDateTime.now())
+                                        .build(),
+                                TypeNotification.friend_request
+                        );
+
+        } catch (Exception ignore) { /* log nếu cần */ }
 
         return FriendResponse.builder().success(true).build();
     }
 
-    public List<FriendPendingResponse> getFriends(String userId) {
+    public List<FriendPendingResponse> getFriends() {
+        JwtAuthenticationToken authentication =
+                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+
+        Jwt jwt = authentication.getToken();
+        String userId = jwt.getSubject(); // sub trong JWT
         List<Friend> pendingRequests = friendRepository
                 .findByAddressee_UserIdAndStatus(userId, Friend.FriendStatus.PENDING);
 
         return pendingRequests.stream()
                 .map(friend -> FriendPendingResponse.builder()
+                        .id(friend.getId())
                         .requesterId(friend.getRequester().getUserId())
                         .requesterAvatar(friend.getRequester().getAvatarUrl())
                         .requesterName(friend.getRequester().getUsername())

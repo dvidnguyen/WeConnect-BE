@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FriendRequest {
-    String to;
-    String body;
-
+public class FriendReactionRequest {
+    String id;
 }

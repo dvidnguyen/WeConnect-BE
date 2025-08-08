@@ -19,6 +19,7 @@ public enum ErrorCode {
     OTP_NOT_FOUND_OR_EXPIRED(404, "Otp Not Found", HttpStatus.NOT_FOUND),
     INVALID_OTP(400, "Invalid Otp", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(400, "Otp Expired", HttpStatus.BAD_REQUEST),
+    FRIEND_REQUEST_NOT_FOUND(404, "Friend Request Not Found", HttpStatus.NOT_FOUND),
 
     ;
 

@@ -31,14 +31,15 @@ public class SecurityConfig {
             "auth/regis",
             "api/otp/send",
             "api/otp/verify",
-            "friend-request/accepted",
-            "friend-request/send",
-            "friend-request/rejected"
+
+//            "friend-request/accepted",
+//            "friend-request/send",
+//            "friend-request/rejected"
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
-            "auth/introspect",
-            "friend-request/{id}",
-            "/api/users/test"
+//            "auth/introspect",
+//            "friend-request/{id}",
+//            "/api/users/test"
     };
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

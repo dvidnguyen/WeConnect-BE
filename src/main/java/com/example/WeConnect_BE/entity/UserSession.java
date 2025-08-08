@@ -28,4 +28,7 @@ public class UserSession {
     private Date createdAt;
 
 
+    public void ifPresent(Object friend) {
+
+    }
 }

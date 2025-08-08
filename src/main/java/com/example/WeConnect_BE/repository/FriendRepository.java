@@ -27,10 +27,6 @@ public interface FriendRepository extends JpaRepository<Friend, String> {
     Optional<Friend> lockByRequesterAndAddressee(String requesterId, String addresseeId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE) // SELECT ... FOR UPDATE
-    @Query("""
-      select f from Friend f
-      where f.requester.userId = :requesterId and f.addressee.userId = :addresseeId
-    """)
-    Optional<Friend> lockByPair(@Param("requesterId") String requesterId,
-                                @Param("addresseeId") String addresseeId);
+    @Query("select f from Friend f where f.id = :id")
+    Optional<Friend> lockById(@Param("id") String id);
 }
