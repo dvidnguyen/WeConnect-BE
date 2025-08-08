@@ -14,12 +14,12 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "\"CONTRACT\"")
+@Table(name = "\"contract\"")
 public class Contact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_user_id")
@@ -30,4 +30,5 @@ public class Contact {
     private User addresseeUser;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+     // Thêm dòng này!
 }

@@ -7,17 +7,21 @@ import com.example.WeConnect_BE.dto.request.FriendRequest;
 import com.example.WeConnect_BE.dto.response.FriendPendingResponse;
 import com.example.WeConnect_BE.dto.response.FriendResponse;
 import com.example.WeConnect_BE.dto.response.NotificationResponse;
+import com.example.WeConnect_BE.entity.Contact;
 import com.example.WeConnect_BE.entity.Friend;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.entity.UserSession;
 import com.example.WeConnect_BE.exception.AppException;
+import com.example.WeConnect_BE.mapper.FriendMapper;
 import com.example.WeConnect_BE.repository.ContactRepository;
 import com.example.WeConnect_BE.repository.FriendRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
 import com.example.WeConnect_BE.repository.UserSessionRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -36,6 +40,7 @@ public class SendRequestFriendService {
     FriendRepository friendRepository;
     NotificationService notificationService;
     ContactRepository contractRepository;
+    FriendMapper  friendMapper;
     SocketIOServer socketIOServer;
 
     public FriendResponse sendFriendRequest(FriendRequest request) {
@@ -79,34 +84,40 @@ public class SendRequestFriendService {
                 .success(true)
                 .build();
     }
-
+    @Transactional
     public FriendResponse acceptFriendRequest(String requesterId, String addresseeId) {
-        // Tìm bản ghi yêu cầu kết bạn
-        Optional<Friend> optionalFriend = friendRepository
-                .findByRequesterUserIdAndAddresseeUserId(requesterId, addresseeId);
+// 1) Lock hàng Friend để tránh 2 request accept cùng lúc
+        Friend friend = friendRepository.lockByPair(requesterId, addresseeId)
+                .orElseThrow(() -> new RuntimeException("Friend request not found"));
 
-        if (optionalFriend.isEmpty()) {
-            return FriendResponse.builder().success(false).build();
+        // Idempotent: nếu đã ACCEPTED, vẫn đảm bảo Contact tồn tại rồi xóa Friend (nếu yêu cầu là xóa)
+        if (friend.getStatus() == Friend.FriendStatus.ACCEPTED) {
+            upsertContactNormalized(friend);
+            friendRepository.delete(friend); // nếu bạn muốn xóa record friend sau khi đã là bạn
+            return FriendResponse.builder().success(true).build();
         }
 
-        Friend friend = optionalFriend.get();
-
-        // Cập nhật trạng thái
+        // 2) Cập nhật trạng thái -> ACCEPTED
         friend.setStatus(Friend.FriendStatus.ACCEPTED);
         friend.setUpdatedAt(LocalDateTime.now());
-        friendRepository.save(friend);
-        // lưu vào bản contact
+        friendRepository.saveAndFlush(friend); // flush sớm giữ thứ tự thao tác
 
+        // 3) Tạo Contact nếu chưa có (idempotent + normalized)
+        upsertContactNormalized(friend);
 
-        // Gửi thông báo cho requester
-        Optional<User> requester = userRepository.findById(requesterId);
+        // 4) Xoá friend request
+        friendRepository.delete(friend);
+
+        // Gửi thông báo nếu cần
+        // ... code gửi thông báo ...
         try {
+            Optional<User> requester = userRepository.findById(requesterId);
             String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
             SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
             Optional<User> addressee = userRepository.findById(addresseeId);
-            notificationService.sendNotification(client, "friend-accepted", NotificationResponse.builder()
+            notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
                     .id(friend.getId())
-                    .body("Friend request accepted")
+                    .body("Friend request rejected")
                     .title(addressee.get().getUsername())
                     .type("FRIEND")
                     .isRead(false)
@@ -120,8 +131,33 @@ public class SendRequestFriendService {
 
         }
 
-
         return FriendResponse.builder().success(true).build();
+    }
+    private void upsertContactNormalized(Friend friend) {
+        String u1 = friend.getRequester().getUserId();
+        String u2 = friend.getAddressee().getUserId();
+
+        // chuẩn hoá: a < b (so sánh chuỗi id)
+        String a = (u1.compareTo(u2) < 0) ? u1 : u2;
+        String b = (u1.compareTo(u2) < 0) ? u2 : u1;
+
+        // Nếu đã có (a,b) -> thôi
+        if (contractRepository.existsByRequesterUser_UserIdAndAddresseeUser_UserId(a, b)) {
+            return;
+        }
+
+        // Chưa có -> tạo mới. KHÔNG tự set id nếu dùng @GeneratedValue.
+        Contact c = Contact.builder()
+                .requesterUser(User.builder().userId(a).build())     // chỉ cần set id (managed do đang trong txn)
+                .addresseeUser(User.builder().userId(b).build())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        try {
+            contractRepository.saveAndFlush(c);
+        } catch (DataIntegrityViolationException e) {
+            // Một request khác vừa tạo xong contact (race) -> bỏ qua
+        }
     }
 
     public FriendResponse rejectFriendRequest(String requesterId, String addresseeId) {
