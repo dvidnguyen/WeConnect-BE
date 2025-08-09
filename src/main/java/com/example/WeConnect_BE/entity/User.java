@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,12 @@ public class User {
     @Column(name = "username")
     private String username;
 
+    @Column(name = "birth_date")
+    private Date birthDate;
+
+    @Column(name = "phone")
+    private String phone;
+
     @Column(name = "password_hash")
     private String passwordHash;
 
@@ -32,6 +40,12 @@ public class User {
     private String avatarUrl;
     @Column(name = "status")
     private int status;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserNotification> userNotifications;

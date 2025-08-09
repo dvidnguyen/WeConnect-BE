@@ -1,19 +1,19 @@
-package com.example.WeConnect_BE.dto.response;
+package com.example.WeConnect_BE.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationResponse {
-    String token;
-    String email;
-    String username;
-    String avatarUrl;
-    boolean authenticated;
+public class FileInfo {
+    String name;
+    String type;
+    String md5checksum;
+    String path;
+    String url;
 }

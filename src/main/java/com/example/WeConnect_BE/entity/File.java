@@ -13,7 +13,7 @@ import java.util.UUID;
 public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
     @Column(name = "fileName")
     private String name;
     @Column(name = "type")

@@ -2,8 +2,14 @@ package com.example.WeConnect_BE.controller;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.example.WeConnect_BE.dto.ApiResponse;
+import com.example.WeConnect_BE.dto.request.EditUserRequest;
+import com.example.WeConnect_BE.dto.response.SearchUserResponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.service.UserService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,22 +18,28 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    @Autowired
-    private UserService userService;
+    UserService userService;
 
-    @Autowired
-    SocketIOServer server;
+    @GetMapping("/search")
+    public ApiResponse<List<SearchUserResponse>> searchUsers(@RequestParam("q") String q) {
 
-//    @GetMapping
-//    public List<User> getAllUsers() {
-//        return userService.getAllUsers();
-//    }
-
-    @GetMapping("/test")
-    public boolean test(@RequestParam("session") String session) {
-       SocketIOClient client =  server.getClient(UUID.fromString(session));
-       client.sendEvent("message", "test");
-       return true;
+        return ApiResponse.<List<SearchUserResponse>>builder()
+                .code(200)
+                .message("success")
+                .result(userService.search(q))
+                .build();
     }
+
+    // api edit user profile
+    @PostMapping("/edit")
+    public ApiResponse<String> editUser(@RequestBody EditUserRequest req) {
+        userService.editUser(req);
+        return ApiResponse.<String>builder()
+                .result("User updated successfully")
+                .build();
+    }
+
 }

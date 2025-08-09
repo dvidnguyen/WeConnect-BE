@@ -31,6 +31,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -87,7 +88,9 @@ public class AuthenticationService {
         // 3. Hash password
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         user.setPasswordHash(encodedPassword);
-
+        // thời gian tạo và update
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
         // 4. Set status mặc định
         user.setStatus(0);
 
@@ -157,6 +160,9 @@ public class AuthenticationService {
 
         String token = generateToken(user);
         return AuthenticationResponse.builder()
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .avatarUrl(user.getAvatarUrl())
                 .token(token)
                 .authenticated(authenticated)
                 .build();

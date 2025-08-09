@@ -5,6 +5,8 @@ CREATE TABLE users (
                        password_hash VARCHAR(255) NOT NULL,
                        username VARCHAR(100) NOT NULL,
                        avatar_url TEXT,
+                       birth_date DATE,
+                       phone VARCHAR(255),
                        status BOOLEAN DEFAULT TRUE,
                        created_at DATETIME,
                        updated_at DATETIME

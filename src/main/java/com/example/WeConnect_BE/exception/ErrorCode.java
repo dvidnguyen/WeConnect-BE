@@ -20,6 +20,7 @@ public enum ErrorCode {
     INVALID_OTP(400, "Invalid Otp", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(400, "Otp Expired", HttpStatus.BAD_REQUEST),
     FRIEND_REQUEST_NOT_FOUND(404, "Friend Request Not Found", HttpStatus.NOT_FOUND),
+    PHONE_ALREADY_EXISTS(400, "Phone Already Exists", HttpStatus.BAD_REQUEST),
 
     ;
 
