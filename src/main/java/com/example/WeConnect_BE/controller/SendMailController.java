@@ -46,10 +46,10 @@ public class SendMailController {
     public ApiResponse<VerifyOtpResponse> verifyOtp(@RequestBody VerifyOtpRequest request,  HttpServletResponse response) {
         boolean valid = sendMailService.verifyOtp(request.getEmail(), request.getOtp());
 
-        String token =  sendMailService.gentoken(request.getEmail());
+        VerifyOtpResponse res =  sendMailService.gentoken(request.getEmail());
 
         // ✅ Gửi token vào cookie
-        Cookie cookie = new Cookie("token", token);
+        Cookie cookie = new Cookie("token", res.getToken());
         cookie.setHttpOnly(true);
         cookie.setSecure(true); // Nếu dùng HTTPS thì nên giữ true
         cookie.setPath("/");
@@ -57,9 +57,7 @@ public class SendMailController {
         response.addCookie(cookie);
 
         return ApiResponse.<VerifyOtpResponse>builder()
-               .result(VerifyOtpResponse.builder()
-                       .token(token)
-                       .build())
+               .result(res)
                .build();
     }
 }

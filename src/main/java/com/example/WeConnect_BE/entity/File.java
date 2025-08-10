@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "FILE")
+@Table(name = "file")
 public class File {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @Column(name = "fileName")
     private String name;
@@ -30,13 +30,7 @@ public class File {
     @JoinColumn(name = "message_id")
     private Message message;
 
-    @Column(name = "uploaded_at")
-    private LocalDateTime uploadedAt;
 
-    @PrePersist
-    public void prePersist() {
-        if (uploadedAt == null) {
-            uploadedAt = LocalDateTime.now();
-        }
-    }
+
+
 }

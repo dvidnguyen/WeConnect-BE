@@ -82,7 +82,7 @@ CREATE TABLE message (
 CREATE TABLE file (
                       id CHAR(255) PRIMARY KEY,
                       message_id CHAR(255),
-                      type VARCHAR(20) CHECK (type IN ('image', 'video', 'document', 'audio', 'other')),
+                      type VARCHAR(20),
                       fileName VARCHAR(255),
                       url TEXT,
                       path TEXT,

@@ -16,4 +16,6 @@ public class FileInfo {
     String md5checksum;
     String path;
     String url;
+    String messageId; // thêm field này
+
 }

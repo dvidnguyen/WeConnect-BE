@@ -6,9 +6,7 @@ import com.example.WeConnect_BE.service.ContactService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +21,22 @@ public class ContactController {
     public ApiResponse<List<ContactResponse>> getAllContacts() {
         return ApiResponse.<List<ContactResponse>>builder()
                 .result(contactService.getContacts())
+                .build();
+    }
+
+    @PostMapping("/block/{user_id}")
+    public ApiResponse<String> blockContact(@PathVariable("user_id") String id) {
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(contactService.blockContact(id))
+                .build();
+    }
+
+    @DeleteMapping("/unblock/{blockedUserId}")
+    public ApiResponse<String> unblock(@PathVariable String blockedUserId) {
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(contactService.unblock(blockedUserId))
                 .build();
     }
 }

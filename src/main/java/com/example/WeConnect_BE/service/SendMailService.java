@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.service;
 
+import com.example.WeConnect_BE.dto.response.VerifyOtpResponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.entity.VerifyCode;
 import com.example.WeConnect_BE.exception.AppException;
@@ -96,10 +97,16 @@ public class SendMailService {
         return true;
     }
 
-    public String gentoken(String email) {
+    public VerifyOtpResponse gentoken(String email) {
        Optional<User> user = userRepository.findByEmail(email);
         String token = authenticationService.generateToken(user.get());
-        return token;
+
+        return VerifyOtpResponse.builder()
+                .token(token)
+                .avatarUrl(user.get().getAvatarUrl())
+                .email(user.get().getEmail())
+                .username(user.get().getUsername())
+                .build();
     }
 
 

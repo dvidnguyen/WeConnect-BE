@@ -27,6 +27,14 @@ public class FileController {
 //                .build();
         return null;
     }
+
+    @PostMapping("/avatar/upload")
+    ApiResponse<Object> uploadMediaAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+        return ApiResponse.<Object>builder()
+                .result(fileService.upLoadFileAvatar(file))
+                .build();
+    }
+
     //    CONTENT_DISPOSITION
 //            CACHE_CONTROL
     @GetMapping("/media/{filename}")
