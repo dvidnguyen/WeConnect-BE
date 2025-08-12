@@ -5,6 +5,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.example.WeConnect_BE.dto.ApiResponse;
 import com.example.WeConnect_BE.dto.request.EditUserRequest;
 import com.example.WeConnect_BE.dto.response.SearchUserResponse;
+import com.example.WeConnect_BE.dto.response.UserProfileResponse;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.service.UserService;
 import lombok.AccessLevel;
@@ -42,4 +43,17 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/profile")
+    public ApiResponse<UserProfileResponse> getProfile() {
+        return ApiResponse.<UserProfileResponse>builder()
+                .result(userService.getUserProfile())
+                .build();
+    }
+
+    @GetMapping("/profile/{id}")
+    public ApiResponse<SearchUserResponse> getOtherProfile(@PathVariable("id") String id) {
+        return ApiResponse.<SearchUserResponse>builder()
+                .result(userService.getOtherProfile(id))
+                .build();
+    }
 }

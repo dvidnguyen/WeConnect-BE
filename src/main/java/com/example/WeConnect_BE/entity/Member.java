@@ -9,11 +9,11 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "MEMBER")
+@Table(name = "member")
 public class Member {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id")

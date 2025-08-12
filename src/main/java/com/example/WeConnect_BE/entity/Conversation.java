@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "CONVERSATION")
+@Table(name = "conversation")
 public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,6 +20,8 @@ public class Conversation {
     private String type;
     @Column(name = "avatar")
     private String avatar;
+    @Column(name = "dm_key")
+    private String dmKey;
 
 
 

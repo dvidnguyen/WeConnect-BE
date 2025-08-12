@@ -33,10 +33,20 @@ public class ContactController {
     }
 
     @DeleteMapping("/unblock/{blockedUserId}")
-    public ApiResponse<String> unblock(@PathVariable String blockedUserId) {
+    public ApiResponse<String> unblock(@PathVariable("blockedUserId") String blockedUserId) {
         return ApiResponse.<String>builder()
                 .code(200)
                 .result(contactService.unblock(blockedUserId))
                 .build();
     }
+
+    @DeleteMapping("/cancel/{userId}")
+    public ApiResponse<String> cancelContact(@PathVariable("userId") String id) {
+        contactService.unfriend(id);
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("Successfully cancelled contact")
+                .build();
+    }
+
 }

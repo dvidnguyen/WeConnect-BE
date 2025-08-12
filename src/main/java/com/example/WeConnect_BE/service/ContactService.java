@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.service;
 
+import com.example.WeConnect_BE.Util.GetIDCurent;
 import com.example.WeConnect_BE.dto.response.ContactResponse;
 import com.example.WeConnect_BE.entity.BlockedUser;
 import com.example.WeConnect_BE.entity.Contact;
@@ -31,11 +32,7 @@ public class ContactService {
     BlockedUserRepository blockedUserRepository;
 
     public List<ContactResponse> getContacts() {
-        JwtAuthenticationToken authentication =
-                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-
-        Jwt jwt = authentication.getToken();
-        String id = jwt.getSubject(); // sub trong JWT
+        String id = GetIDCurent.getId(); // sub trong JWT
         List<Contact> contacts = contactRepository
                 .findAllByUserId(id);
 
@@ -59,11 +56,7 @@ public class ContactService {
     }
 
     public String blockContact(String id) {
-        JwtAuthenticationToken authentication =
-                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-
-        Jwt jwt = authentication.getToken();
-        String owner_id = jwt.getSubject(); // sub trong JWT
+        String owner_id = GetIDCurent.getId(); // sub trong JWT
         if (owner_id.equals(id)) {
             throw new AppException(ErrorCode.BAD_REQUEST);
         }
@@ -84,11 +77,8 @@ public class ContactService {
     }
     @Transactional
     public String unblock(String id) {
-        JwtAuthenticationToken authentication =
-                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
-        Jwt jwt = authentication.getToken();
-        String owner_id = jwt.getSubject(); // sub trong JWT
+        String owner_id = GetIDCurent.getId(); // sub trong JWT
         if (owner_id.equals(id)) {
             throw new AppException(ErrorCode.BAD_REQUEST);
         }
@@ -101,5 +91,23 @@ public class ContactService {
         }
 
         return "failure";
+    }
+
+    @Transactional
+    public void unfriend( String targetUserId) {
+        String currentUserId = GetIDCurent.getId();
+        if (currentUserId.equals(targetUserId)) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        var exists = contactRepository.findBetween(currentUserId, targetUserId).isPresent();
+        if (!exists) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        int affected = contactRepository.deleteBetween(currentUserId, targetUserId);
+        if (affected == 0) {
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

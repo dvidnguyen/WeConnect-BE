@@ -2,6 +2,7 @@ package com.example.WeConnect_BE.mapper;
 
 import com.example.WeConnect_BE.dto.request.RegisterRequest;
 import com.example.WeConnect_BE.dto.response.SearchUserResponse;
+import com.example.WeConnect_BE.dto.response.UserProfileResponse;
 import com.example.WeConnect_BE.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,4 +16,8 @@ public interface UserMapper {
     User toUser(RegisterRequest registerRequest);
 
     SearchUserResponse toSearchUserResponse(User user);
+
+    UserProfileResponse toUserProfileResponse(User user);
+
+
 }

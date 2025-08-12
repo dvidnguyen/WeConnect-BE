@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "READ_RECEIPT")
+@Table(name = "read_receipt")
 public class ReadReceipt {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -39,4 +39,33 @@ public interface ContactRepository extends JpaRepository<Contact, String> {
         where c.requesterUser.userId = :a and c.addresseeUser.userId = :b
     """)
     boolean existsPair(@Param("a") String a, @Param("b") String b);
+
+    // Tìm quan hệ giữa 2 user bất kể chiều
+    @Query("""
+        select c from Contact c
+        where (c.requesterUser.userId = :u1 and c.addresseeUser.userId = :u2)
+           or (c.requesterUser.userId = :u2 and c.addresseeUser.userId = :u1)
+    """)
+    Optional<Contact> findBetween(@Param("u1") String u1, @Param("u2") String u2);
+
+    // Xóa quan hệ giữa 2 user bất kể chiều
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        delete from Contact c
+        where (c.requesterUser.userId = :u1 and c.addresseeUser.userId = :u2)
+           or (c.requesterUser.userId = :u2 and c.addresseeUser.userId = :u1)
+    """)
+    int deleteBetween(@Param("u1") String u1, @Param("u2") String u2);
+
+    @Query("""
+        select case
+                 when c.requesterUser.userId = :currentUserId then c.addresseeUser.userId
+                 else c.requesterUser.userId
+               end
+        from Contact c
+        where (c.requesterUser.userId = :currentUserId and c.addresseeUser.userId in :otherIds)
+           or (c.addresseeUser.userId = :currentUserId and c.requesterUser.userId in :otherIds)
+    """)
+    List<String> findContactUserIdsWith(@Param("currentUserId") String currentUserId,
+                                        @Param("otherIds") List<String> otherIds);
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,4 +27,16 @@ public interface BlockedUserRepository extends JpaRepository<BlockedUser, String
     // phục vụ unblock hoặc lấy record cụ thể
     Optional<BlockedUser> findByUser_UserIdAndBlockedUser_UserId(String userId, String blockedUserId);
     long deleteByUser_UserIdAndBlockedUser_UserId(String userId, String blockedUserId);
+
+    @Query("""
+        select case
+                 when b.user.userId = :currentUserId then b.blockedUser.userId
+                 else b.user.userId
+               end
+        from BlockedUser b
+        where (b.user.userId = :currentUserId and b.blockedUser.userId in :otherIds)
+           or (b.blockedUser.userId = :currentUserId and b.user.userId in :otherIds)
+    """)
+    List<String> findBlockedCounterparts(@Param("currentUserId") String currentUserId,
+                                         @Param("otherIds") List<String> otherIds);
 }

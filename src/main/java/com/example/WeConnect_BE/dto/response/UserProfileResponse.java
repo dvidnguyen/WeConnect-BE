@@ -11,16 +11,10 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class SearchUserResponse {
-    String userId;
+public class UserProfileResponse {
     String email;
     String username;
+    String avatarUrl;
     Date birthDate;
     String phone;
-    String avatarUrl;
-    boolean isFriend;
-    boolean isBlocked;
-
-
 }

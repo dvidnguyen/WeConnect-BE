@@ -157,6 +157,12 @@ CREATE TABLE user_notification (
                                    FOREIGN KEY (user_id) REFERENCES users(user_id),
                                    FOREIGN KEY (notification_id) REFERENCES notification(id)
 );
+
+ALTER TABLE conversation
+    ADD COLUMN dm_key VARCHAR(255) NULL AFTER type;
+
+CREATE UNIQUE INDEX ux_conversation_dmkey ON conversation (dm_key);
+
 ALTER TABLE contract
     ADD CONSTRAINT uq_contact_pair UNIQUE (requester_user_id, addressee_user_id);
 -- Trigger để xóa yêu cầu từ bảng contract khi yêu cầu được accepted hoặc rejected

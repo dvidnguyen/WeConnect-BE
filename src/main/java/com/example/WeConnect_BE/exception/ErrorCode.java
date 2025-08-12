@@ -24,6 +24,8 @@ public enum ErrorCode {
     BAD_REQUEST(400, "Bad Request", HttpStatus.BAD_REQUEST),
     REPEAT_REQUEST(400, "Repeat Request", HttpStatus.BAD_REQUEST),
     NOT_FOUND(404, "Not Found", HttpStatus.NOT_FOUND),
+    BE_BLOCKED(403, "Be Blocked", HttpStatus.FORBIDDEN),
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     ;
 

@@ -2,6 +2,7 @@ package com.example.WeConnect_BE.service;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.example.WeConnect_BE.Util.GetIDCurent;
 import com.example.WeConnect_BE.Util.TypeNotification;
 import com.example.WeConnect_BE.dto.request.FriendReactionRequest;
 import com.example.WeConnect_BE.dto.request.FriendRequest;
@@ -49,13 +50,13 @@ public class SendRequestFriendService {
     SocketIOServer socketIOServer;
 
     public FriendResponse sendFriendRequest(FriendRequest request) {
-        JwtAuthenticationToken authentication =
-                (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
-        Jwt jwt = authentication.getToken();
-        String from = jwt.getSubject(); // sub trong JWT
+        String from = GetIDCurent.getId(); // sub trong JWT
         // 1. Kiểm tra đã có yêu cầu chưa
         boolean exists = friendRepository.existsByRequesterUserIdAndAddresseeUserId(from, request.getTo());
+        if(from.equals(request.getTo())) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
         if (exists) return FriendResponse.builder()
                 .success(true)
                 .build();
