@@ -1,16 +1,21 @@
 package com.example.WeConnect_BE.service;
 
 import com.example.WeConnect_BE.dto.response.FileData;
+import com.example.WeConnect_BE.entity.Conversation;
+import com.example.WeConnect_BE.entity.File;
+import com.example.WeConnect_BE.entity.Message;
 import com.example.WeConnect_BE.entity.User;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.mapper.FileMapper;
+import com.example.WeConnect_BE.repository.ConversationRepository;
 import com.example.WeConnect_BE.repository.FileLoadRepository;
 import com.example.WeConnect_BE.repository.FileRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.core.io.Resource;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -27,11 +32,14 @@ public class FileService {
 
     FileLoadRepository fileRepository;
     UserRepository userRepository;
+    ConversationRepository conversationRepository;
     FileRepository fileMgt;
     FileMapper fileMapper;
-    public Object upLoadFile(MultipartFile file) throws IOException {
+    public File upLoadFileMessage(MultipartFile file, Message m) throws IOException {
         var fileInfo = fileRepository.upLoadFile(file);
-        var fileMgtOb = fileMapper.toFile(fileInfo);
+        File fileMgtOb = fileMapper.toFile(fileInfo);
+
+        fileMgtOb.setMessage(m);
 
         return fileMgt.save(fileMgtOb);
     }
@@ -54,9 +62,28 @@ public class FileService {
     }
 
     public FileData dowloadFile(String filename) throws IOException {
-        var fileMgtob = fileMgt.findById(filename)
-                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
-        var resource  = fileRepository.read(fileMgtob);
-        return new FileData(fileMgtob.getType(),resource);
+        File fileMgtob = null;
+        Resource resource = null;
+        try {
+            fileMgtob = fileMgt.findByName((filename));
+            resource = fileRepository.read(fileMgtob);
+           
+        } catch (Exception e) {
+            new AppException(ErrorCode.FILE_NOT_FOUND);
+        }
+        return new FileData(fileMgtob.getType(), resource);
+    }
+
+    public Object uploadFileAvatarConversation(MultipartFile file, String convId) throws IOException {
+        //upload
+        var fileInfo = fileRepository.upLoadFile(file);
+        // get user
+
+        Conversation conversation = conversationRepository.findById(convId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        var fileMgtOb = fileMapper.toFile(fileInfo);
+
+        conversation.setAvatar(fileMgtOb.getUrl());
+        conversationRepository.save(conversation);
+        return fileMgt.save(fileMgtOb);
     }
 }

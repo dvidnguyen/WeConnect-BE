@@ -21,4 +21,12 @@ public class WebSocketSessionService {
     public void delete(String sessionId) {
         userSessionRepository.deleteById(sessionId);
     }
+    public String getUserId(String sessionId) {
+        UserSession userSession = userSessionRepository.findById(sessionId).orElse(null);
+        if (userSession != null) {
+            return userSession.getUserId();
+        } else  {
+            return null;
+        }
+    }
 }

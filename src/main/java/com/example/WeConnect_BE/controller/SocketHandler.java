@@ -4,10 +4,19 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
+import com.corundumstudio.socketio.annotation.OnEvent;
+import com.example.WeConnect_BE.Util.SocketEmitter;
 import com.example.WeConnect_BE.dto.request.IntrospectRequest;
+import com.example.WeConnect_BE.dto.request.ReactionPayload;
+import com.example.WeConnect_BE.dto.request.ReadPayload;
 import com.example.WeConnect_BE.dto.response.IntrospectResponse;
+import com.example.WeConnect_BE.dto.response.ReactionBroadcast;
+import com.example.WeConnect_BE.dto.response.ReadBroadcast;
 import com.example.WeConnect_BE.entity.UserSession;
+import com.example.WeConnect_BE.repository.MemberRepository;
 import com.example.WeConnect_BE.service.AuthenticationService;
+import com.example.WeConnect_BE.service.MessageReactionService;
+import com.example.WeConnect_BE.service.ReadReceiptService;
 import com.example.WeConnect_BE.service.WebSocketSessionService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.annotation.PostConstruct;
@@ -21,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -30,6 +40,10 @@ public class SocketHandler {
     SocketIOServer socketIOServer;
     AuthenticationService authenticationService;
     WebSocketSessionService webSocketSessionService;
+    ReadReceiptService readReceiptService;
+    MessageReactionService messageReactionService;
+    MemberRepository  memberRepository;
+    SocketEmitter  socketEmitter;
     @PostConstruct
     public void init() {
         socketIOServer.addListeners(this);
@@ -67,6 +81,40 @@ public class SocketHandler {
         client.sendEvent("disconnect", "Disconnected from Socket.IO server");
         log.info("Client disconnected: {}", client.getSessionId());
     }
+    // -------- Read Receipt ----------
+    @OnEvent("receipt")
+    public void onRead(SocketIOClient client, ReadPayload payload) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null) return;
+
+        ReadBroadcast out = readReceiptService.markAsRead(userId, payload.getMessageId());
+
+        // emit cho tất cả trừ người đọc
+        List<String> recipients = memberRepository
+                .findUserIdsByConversationExcept(out.getConversationId(), userId);
+        socketEmitter.emitToUsers(recipients, "receipt-update", out);
+
+        // ack cho client
+        client.sendEvent("receipt-ack", out);
+    }
+
+    // -------- Reaction (like/unlike) ----------
+    @OnEvent("reaction-like")
+    public void onReactLike(SocketIOClient client, ReactionPayload payload) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null) return;
+
+        ReactionBroadcast out = messageReactionService
+                .setLike(userId, payload.getMessageId(), payload.isLike());
+
+        // emit cho tất cả trừ người thao tác
+        List<String> recipients = memberRepository
+                .findUserIdsByConversationExcept(out.getConversationId(), userId);
+        socketEmitter.emitToUsers(recipients, "reaction-update", out);
+
+        client.sendEvent("reaction-ack", out);
+    }
+
 
 
 

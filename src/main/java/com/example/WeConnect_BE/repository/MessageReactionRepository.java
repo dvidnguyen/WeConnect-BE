@@ -6,4 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 @Repository
-public interface MessageReactionRepository extends JpaRepository<MessageReaction, UUID> {}
+public interface MessageReactionRepository extends JpaRepository<MessageReaction, String> {
+    boolean existsByMessage_IdAndUser_UserId(String messageId, String userId);
+
+    void deleteByMessage_IdAndUser_UserId(String messageId, String userId);
+
+    long countByMessage_Id(String messageId);
+}

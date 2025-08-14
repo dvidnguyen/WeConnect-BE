@@ -70,10 +70,10 @@ CREATE TABLE message (
                          id CHAR(255) PRIMARY KEY,
                          conversation_id CHAR(255),
                          sender_user_id CHAR(255),
-                         type VARCHAR(20) CHECK (type IN ('text', 'image', 'file', 'voice', 'video', 'sticker')),
+                         type VARCHAR(20) CHECK (type IN ('text', 'image', 'file', 'voice', 'video', 'sticker', 'leave' , 'invite')),
                          content TEXT,
                          status VARCHAR(20) CHECK (status IN ('sent', 'delivered', 'read')),
-                         timestamp DATETIME,
+                         sent_at DATETIME,
                          FOREIGN KEY (conversation_id) REFERENCES conversation(id),
                          FOREIGN KEY (sender_user_id) REFERENCES users(user_id)
 );

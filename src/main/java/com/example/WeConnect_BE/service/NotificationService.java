@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -27,32 +28,35 @@ public class NotificationService {
     NotificationRepository notificationRepository;
     UserRepository userRepository;
     UserNotificationRepository userNotificationRepository;
-    public void sendNotification(SocketIOClient client, String event, NotificationResponse data, TypeNotification typeNotification) {
-        if (client != null && client.isChannelOpen()) {
-            client.sendEvent(event, data);
-            log.info("đã gửi thông báo");
+    public void sendNotification(List<SocketIOClient> clients, String event, NotificationResponse data, TypeNotification typeNotification) {
+        if (clients != null && !clients.isEmpty()) {
+            for (SocketIOClient socketIOClient : clients) {
+                socketIOClient.sendEvent(event, data);
+                log.info("đã gửi thông báo");
 
-            Notification notification = Notification.builder()
-                    .title(data.getTitle())
-                    .body(data.getBody())
-                    .type(typeNotification)
-                    .relatedId(data.getRelatedId())
-                    .createdAt(new Date()) // hoặc sử dụng data.getCreatedAt() nếu có
-                    .build();
-            notificationRepository.save(notification);
-
-            User user = userRepository.findById(data.getSenderId()).orElse(null);
-            if (user != null) {
-                UserNotification userNotification = UserNotification.builder()
-                        .notification(notification)
-                        .user(user)
-                        .isRead(data.isRead() ? 1 : 0) // hoặc false mặc định
+                Notification notification = Notification.builder()
+                        .title(data.getTitle())
+                        .body(data.getBody())
+                        .type(typeNotification)
+                        .relatedId(data.getRelatedId())
+                        .createdAt(new Date()) // hoặc sử dụng data.getCreatedAt() nếu có
                         .build();
+                notificationRepository.save(notification);
 
-                userNotificationRepository.save(userNotification);
-            } else {
-                log.warn("Không tìm thấy người dùng với id = {}", data.getSenderId());
+                User user = userRepository.findById(data.getSenderId()).orElse(null);
+                if (user != null) {
+                    UserNotification userNotification = UserNotification.builder()
+                            .notification(notification)
+                            .user(user)
+                            .isRead(data.isRead() ? 1 : 0) // hoặc false mặc định
+                            .build();
+
+                    userNotificationRepository.save(userNotification);
+                } else {
+                    log.warn("Không tìm thấy người dùng với id = {}", data.getSenderId());
+                }
             }
+
         }  else {
         log.warn("Client null hoặc channel đã đóng.");
     }

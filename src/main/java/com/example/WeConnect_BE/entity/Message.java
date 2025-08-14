@@ -2,29 +2,38 @@ package com.example.WeConnect_BE.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "message")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id")
     private Conversation conversation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "sender_user_id")
     private User sender;
-
+    @Column(name = "content")
     private String content;
-
+    @Column(name = "type")
+    @Enumerated(EnumType.STRING)
+    private Type type;
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
@@ -42,5 +51,17 @@ public class Message {
         if (sentAt == null) {
             sentAt = LocalDateTime.now();
         }
+    }
+
+    public enum Type {
+        text,
+        image,
+        file,
+        voice,
+        video,
+        sticker,
+        leave,
+        invite
+
     }
 }

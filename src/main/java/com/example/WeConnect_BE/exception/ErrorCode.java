@@ -25,7 +25,13 @@ public enum ErrorCode {
     REPEAT_REQUEST(400, "Repeat Request", HttpStatus.BAD_REQUEST),
     NOT_FOUND(404, "Not Found", HttpStatus.NOT_FOUND),
     BE_BLOCKED(403, "Be Blocked", HttpStatus.FORBIDDEN),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR),
+    FORBIDDEN(403, "Forbidden", HttpStatus.FORBIDDEN),
+    NOT_FOUND_CANDIDATE(404, "Not Found candidate", HttpStatus.NOT_FOUND),
+    CONVERSATION_NOT_FOUND(404, "Conversation Not Found", HttpStatus.NOT_FOUND),
+    FILE_UPLOAD_FAILED(404, "File Upload Failed", HttpStatus.BAD_REQUEST),
+    MESSAGE_NOT_FOUND(404, "Message Not Found", HttpStatus.NOT_FOUND),
+
 
     ;
 

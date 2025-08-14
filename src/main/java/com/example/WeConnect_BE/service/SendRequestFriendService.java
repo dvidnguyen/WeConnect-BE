@@ -71,9 +71,9 @@ public class SendRequestFriendService {
                 .build();
         friendRepository.save(friend);
         try {
-            UserSession userSession =  userSessionRepository.findByUserId(request.getTo());
-            SocketIOClient client = socketIOServer.getClient(UUID.fromString(userSession.getSessionId()));
-            notificationService.sendNotification(client,"friend", NotificationResponse
+            List<UserSession> userSessions =  userSessionRepository.findByUserId(request.getTo());
+            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
+            notificationService.sendNotification(clients,"friend", NotificationResponse
                     .builder()
                     .id(friend.getId())
                     .body(request.getBody())
@@ -128,10 +128,10 @@ public class SendRequestFriendService {
 
         try {
             Optional<User> requester = userRepository.findById(friend.getRequester().getUserId());
-            String sesssionId = userSessionRepository.findByUserId(requester.get().getUserId()).getSessionId();
-            SocketIOClient client = socketIOServer.getClient(UUID.fromString(sesssionId));
+            List<UserSession> userSessions = userSessionRepository.findByUserId(requester.get().getUserId());
+            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
             Optional<User> addressee = userRepository.findById(currentUserId);
-            notificationService.sendNotification(client, "friend-rejected", NotificationResponse.builder()
+            notificationService.sendNotification(clients, "friend-rejected", NotificationResponse.builder()
                     .id(friend.getId())
                     .body("Friend request rejected")
                     .title(addressee.get().getUsername())
@@ -207,12 +207,11 @@ public class SendRequestFriendService {
             User addressee = friend.getAddressee();
 
             // lấy session người nhận notify
-           UserSession userSession =  userSessionRepository.findByUserId(requester.getUserId());
-            String sid = userSession.getSessionId();
-            // kiểu UUID
-                SocketIOClient client = socketIOServer.getClient(UUID.fromString(sid));// kiểu UUID nếu bạn mapping như vậy
+            List<UserSession> userSessions = userSessionRepository.findByUserId(requester.getUserId());
+            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
+           // kiểu UUID nếu bạn mapping như vậy
                         notificationService.sendNotification(
-                                client,
+                                clients,
                                 "friend-rejected",
                                 NotificationResponse.builder()
                                         .id(friend.getId())

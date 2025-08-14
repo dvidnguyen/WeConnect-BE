@@ -31,7 +31,7 @@ public class Member {
 
 
     public enum Role {
-        ADMIN,
-        MEMBER
+        admin,
+        member
     }
 }

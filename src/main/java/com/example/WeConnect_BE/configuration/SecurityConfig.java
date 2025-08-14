@@ -39,6 +39,8 @@ public class SecurityConfig {
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
 //            "auth/introspect",
+            "/media/{filename}",
+            "/media/{filename}/download"
 //            "friend-request/{id}",
 //            "/api/users/test"
     };

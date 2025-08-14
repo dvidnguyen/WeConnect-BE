@@ -1,0 +1,16 @@
+package com.example.WeConnect_BE.dto.response;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class LeaveGroupResponse {
+    String conversationId;
+    String leaverId;
+    boolean conversationDeleted;
+    String promotedToAdmin;
+}

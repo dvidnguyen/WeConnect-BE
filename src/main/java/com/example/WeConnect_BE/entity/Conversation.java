@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.entity;
 
+import com.example.WeConnect_BE.dto.request.ConversationType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,18 +13,20 @@ import java.util.UUID;
 @Table(name = "conversation")
 public class Conversation {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
     @Column(name = "name")
     private String name;
+    @Enumerated(EnumType.STRING)
     @Column(name = "type")
-    private String type;
+    private ConversationType type;
     @Column(name = "avatar")
     private String avatar;
     @Column(name = "dm_key")
     private String dmKey;
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
