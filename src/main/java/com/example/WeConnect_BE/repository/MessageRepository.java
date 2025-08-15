@@ -21,27 +21,25 @@ public interface MessageRepository extends JpaRepository<Message, String> {
     """)
     List<Message> firstPage(@Param("cid") String conversationId, Pageable pageable);
 
-    // Cũ hơn (before)
     @Query("""
-        SELECT m FROM Message m
-        WHERE m.conversation.id = :cid
-          AND (m.sentAt < :sentAt
-               OR (m.sentAt = :sentAt AND m.id < :id))
-        ORDER BY m.sentAt DESC, m.id DESC
-    """)
+    SELECT m FROM Message m
+    WHERE m.conversation.id = :cid
+      AND (m.sentAt < :sentAt
+           OR (m.sentAt = :sentAt AND function('strcmp', m.id, :id) < 0))
+    ORDER BY m.sentAt DESC, m.id DESC
+  """)
     List<Message> before(@Param("cid") String conversationId,
                          @Param("sentAt") LocalDateTime sentAt,
                          @Param("id") String id,
                          Pageable pageable);
 
-    // Mới hơn (after): lấy ASC rồi đảo ở service để trả DESC
     @Query("""
-        SELECT m FROM Message m
-        WHERE m.conversation.id = :cid
-          AND (m.sentAt > :sentAt
-               OR (m.sentAt = :sentAt AND m.id > :id))
-        ORDER BY m.sentAt ASC, m.id ASC
-    """)
+    SELECT m FROM Message m
+    WHERE m.conversation.id = :cid
+      AND (m.sentAt > :sentAt
+           OR (m.sentAt = :sentAt AND function('strcmp', m.id, :id) > 0))
+    ORDER BY m.sentAt ASC, m.id ASC
+  """)
     List<Message> afterAsc(@Param("cid") String conversationId,
                            @Param("sentAt") LocalDateTime sentAt,
                            @Param("id") String id,

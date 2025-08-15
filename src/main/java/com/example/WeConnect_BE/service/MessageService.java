@@ -9,6 +9,7 @@ import com.example.WeConnect_BE.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // <— dùng transaction của Spring
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -34,6 +36,7 @@ public class MessageService {
     SocketEmitter socketEmitter;
     ReadReceiptRepository readReceiptRepository; // nếu có
 
+
     @Transactional
     public MessageResponse createMessage(
             String senderId,
@@ -42,18 +45,19 @@ public class MessageService {
             Message.Type type,
             List<MultipartFile> files
     ) {
+        log.info("1");
         // 1) Load & validate
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
-
+        log.info("2");
         // Kiểm tra membership
         boolean isMember = memberRepository.existsByConversation_IdAndUser_UserId(conversationId, senderId);
         if (!isMember) {
             throw new AppException(ErrorCode.FORBIDDEN); // hoặc lỗi riêng: NOT_CONVERSATION_MEMBER
         }
-
+        log.info("3");
         // 2) Xác định type hợp lệ
         boolean hasFiles = files != null && !files.isEmpty();
         if (type == null) {
@@ -62,7 +66,7 @@ public class MessageService {
         if (!hasFiles && (content == null || content.isBlank())) {
             throw new AppException(ErrorCode.BAD_REQUEST); // phải có content hoặc file
         }
-
+        log.info("4");
         // 3) Tạo message (chưa persist file)
         Message message = Message.builder()
                 .content(content != null && !content.isBlank() ? content : null)
@@ -71,7 +75,7 @@ public class MessageService {
                 .type(type)
                 .sentAt(LocalDateTime.now())
                 .build();
-
+        log.info("5");
         // 4) Xử lý upload file (nếu có)
         List<com.example.WeConnect_BE.entity.File> fileList = new ArrayList<>();
         if (hasFiles) {
@@ -87,7 +91,7 @@ public class MessageService {
             }
             message.setFiles(fileList);
         }
-
+        log.info("6");
         // 5) Lưu message (nếu fileService không tự save message)
         // Nếu upLoadFileMessage đã set message đúng quan hệ và cascade ALL thì save message 1 lần là đủ
         Message saved = messageRepository.save(message);
@@ -100,7 +104,7 @@ public class MessageService {
         recipients.remove(senderId);
         MessageResponse payload = conversationService.toDTO(saved);
         socketEmitter.emitToUsers(recipients, "message", payload);
-
+        log.info("7");
         return payload;
     }
 

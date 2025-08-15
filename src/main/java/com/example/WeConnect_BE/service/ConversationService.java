@@ -9,10 +9,7 @@ import com.example.WeConnect_BE.dto.request.ConversationType;
 import com.example.WeConnect_BE.dto.request.CreateConversationRequest;
 import com.example.WeConnect_BE.dto.request.InviteMembersRequest;
 import com.example.WeConnect_BE.dto.response.*;
-import com.example.WeConnect_BE.entity.Conversation;
-import com.example.WeConnect_BE.entity.Member;
-import com.example.WeConnect_BE.entity.Message;
-import com.example.WeConnect_BE.entity.User;
+import com.example.WeConnect_BE.entity.*;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.repository.ConversationRepository;
@@ -41,7 +38,6 @@ public class ConversationService {
     UserRepository userRepository;
     MessageRepository messageRepository;
     MemberRepository memberRepository;
-    SocketIOServer  server;
     SocketEmitter emitter;
 
     @Transactional
@@ -182,8 +178,13 @@ public class ConversationService {
 
             // Gửi 1 "conversation:new" cho từng user được thêm vào group
             for (String uid : allMemberIds) {
-                conversationRepository.findOneRowForUser(uid, saved.getId())
-                        .ifPresent(row -> emitter.emitToUser(uid, "invite", row));
+               Optional<ConversationRow> row =  conversationRepository.findOneRowForUser(uid, saved.getId());
+                if(row.isPresent()) {
+                    emitter.emitToUser(uid, "group-invite", row);
+                }
+
+
+
             }
 
             // (tuỳ chọn) Tạo & bắn một system message "X đã tạo nhóm" nếu bạn muốn hiển thị dòng hệ thống:
@@ -226,7 +227,7 @@ public class ConversationService {
         } else if (after != null && !after.isBlank()) {
             var p = CursorUtil.decode(after);
             LocalDateTime cSentAt = LocalDateTime.ofInstant(p.getKey(), ZoneOffset.UTC);
-            list = messageRepository.afterAsc(conversationId, cSentAt, p.getValue(), page); // ASC
+            list = messageRepository.afterAsc(conversationId, cSentAt,p.getValue(), page); // ASC
             Collections.reverse(list);                                         // trả DESC
         } else {
             list = messageRepository.firstPage(conversationId, page);                        // DESC
@@ -264,20 +265,37 @@ public class ConversationService {
     }
 
     public MessageResponse toDTO(Message m) {
+        List<MessageReaction> reactions =
+                m.getReactions() != null ? m.getReactions() : List.of();
+        List<ReadReceipt> receipts =
+                m.getReadReceipts() != null ? m.getReadReceipts() : List.of();
+        List<File> files =
+                m.getFiles() != null ? m.getFiles() : List.of();
+
+        // Java 16+: .toList()
+        // var urls = files.stream().map(File::getUrl).toList();
+        // var downloads = files.stream().map(f -> f.getUrl() + "/download").toList();
+
+        // Java 8–15:
+        List<String> urls = files.stream()
+                .map(File::getUrl)
+                .collect(Collectors.toList());
+        List<String> downloads = files.stream()
+                .map(f -> f.getUrl() + "/download")
+                .collect(Collectors.toList());
+
         return MessageResponse.builder()
-                .id(m.getId().toString())
+                .id(m.getId()) // đã là String
                 .conversationId(m.getConversation().getId())
-                .senderId(m.getSender().getUserId()) // nếu field khác, đổi cho khớp
+                .senderId(m.getSender().getUserId())
                 .content(m.getContent())
-                .reaction(m.getReactions().size())
-                .receipt(m.getReadReceipts().size())
-                .mine(GetIDCurent.getId().equals(m.getSender().getUserId()))
+                .reaction(reactions.size())
+                .receipt(receipts.size())
+                .mine(Objects.equals(GetIDCurent.getId(), m.getSender().getUserId()))
                 .senderName(m.getSender().getUsername())
                 .SenderAvatar(m.getSender().getAvatarUrl())
-                .url((List<String>) m.getFiles().stream()
-                        .map((file -> file.getUrl())))
-                .urlDownload((List<String>) m.getFiles().stream()
-                        .map((file -> file.getUrl() + "/download")))
+                .url(urls)
+                .urlDownload(downloads)
                 .type(m.getType() == null ? null : m.getType().name())
                 .sentAt(m.getSentAt().toInstant(ZoneOffset.UTC))
                 .build();
@@ -391,12 +409,12 @@ public class ConversationService {
             // ==== EMIT AFTER COMMIT ====
             emitter.emitAfterCommit(() -> {
                 // 1) Bắn system message cho tất cả thành viên hiện tại
-                emitter.emitToUsers(existed, "message:new", dto);
+                emitter.emitToUsers(existed, "message", dto);
 
                 // 2) Gửi 1 row conversation mới cho từng user vừa được mời
                 for (String uid : added) {
                     conversationRepository.findOneRowForUser(uid, conv.getId())
-                            .ifPresent(row -> emitter.emitToUser(uid, "conversation:new", row));
+                            .ifPresent(row -> emitter.emitToUser(uid, "group-invite", row));
                 }
 
                 // (tuỳ chọn) Nếu bạn có "room = conversationId" thì có thể dùng:
@@ -445,7 +463,7 @@ public class ConversationService {
             // emit sau commit
             emitter.emitAfterCommit(() -> {
                 // cho người rời: xoá hội thoại khỏi danh sách
-                emitter.emitToUser(leaverId, "conversation:removed",
+                emitter.emitToUser(leaverId, "cancel",
                         Map.of("conversationId", conversationId));
             });
 
@@ -517,7 +535,7 @@ public class ConversationService {
                 emitter.emitToUsers(remain, "message", dto);
             }
             // b) Cho người rời: loại bỏ hội thoại khỏi list
-            emitter.emitToUser(leaverId, "leave",
+            emitter.emitToUser(leaverId, "group-leave",
                     Map.of("conversationId", conversationId));
 
             // c) (tuỳ chọn) Nếu có thay đổi quyền admin, báo cho nhóm cập nhật role

@@ -20,7 +20,7 @@ public class MessageResponse {
     String SenderAvatar;
     String type;
     long receipt;
-    long reaction;
+    int reaction;
     List<String> url;
     List<String> urlDownload;
     String content;

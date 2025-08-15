@@ -42,7 +42,10 @@ app:
     storage-dir: D:/upload
     dowload-prefix: http://localhost:8080/identity/media/
   cors-origin: http://localhost:5173
-
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
 jwt:
   valid-duration: 3600
   refresh-duration: 360000

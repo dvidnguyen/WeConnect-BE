@@ -26,7 +26,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
           lm.id        AS lastMessageId,
           lm.content   AS lastMessage,
           lm.sent_at   AS lastMessageTime,
-          lm.sender_id AS lastMessageSenderId,
+          lm.sender_user_id AS lastMessageSenderId,
 
           (
             SELECT COUNT(*)
@@ -36,7 +36,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
              AND rr.user_id = :userId
             WHERE m.conversation_id = c.id
               AND rr.id IS NULL            -- chưa có dấu đọc cho user này
-              AND m.sender_id <> :userId   -- không tính tin của chính mình
+              AND m.sender_user_id <> :userId   -- không tính tin của chính mình
           ) AS unreadCount
 
         FROM conversation c
@@ -79,7 +79,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
           lm.id        AS lastMessageId,
           lm.content   AS lastMessage,
           lm.sent_at   AS lastMessageTime,
-          lm.sender_id AS lastMessageSenderId,
+          lm.sender_user_id AS lastMessageSenderId,
 
           (
             SELECT COUNT(*)
@@ -89,7 +89,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
              AND rr.user_id = :userId
             WHERE m.conversation_id = c.id
               AND rr.id IS NULL
-              AND m.sender_id <> :userId
+              AND m.sender_user_id <> :userId
           ) AS unreadCount
 
         FROM conversation c

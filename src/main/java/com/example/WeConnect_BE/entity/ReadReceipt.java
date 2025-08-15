@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "read_receipt")
 public class ReadReceipt {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -31,8 +31,8 @@ public class Message {
     private User sender;
     @Column(name = "content")
     private String content;
-    @Column(name = "type")
     @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private Type type;
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
