@@ -181,6 +181,7 @@ public class AuthenticationService {
 
 
 
+
     public AuthenticationResponse refreshToken(RefreshTokenRequest req) throws ParseException, JOSEException {
         var signedJWT = verifyToken(req.getToken(), true);
         String jti = signedJWT.getJWTClaimsSet().getJWTID();
