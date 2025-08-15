@@ -7,17 +7,16 @@ import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
 import com.example.WeConnect_BE.Util.SocketEmitter;
 import com.example.WeConnect_BE.dto.request.IntrospectRequest;
+import com.example.WeConnect_BE.dto.request.NotifMarkReadPayload;
 import com.example.WeConnect_BE.dto.request.ReactionPayload;
 import com.example.WeConnect_BE.dto.request.ReadPayload;
 import com.example.WeConnect_BE.dto.response.IntrospectResponse;
+import com.example.WeConnect_BE.dto.response.NotificationResponse;
 import com.example.WeConnect_BE.dto.response.ReactionBroadcast;
 import com.example.WeConnect_BE.dto.response.ReadBroadcast;
 import com.example.WeConnect_BE.entity.UserSession;
 import com.example.WeConnect_BE.repository.MemberRepository;
-import com.example.WeConnect_BE.service.AuthenticationService;
-import com.example.WeConnect_BE.service.MessageReactionService;
-import com.example.WeConnect_BE.service.ReadReceiptService;
-import com.example.WeConnect_BE.service.WebSocketSessionService;
+import com.example.WeConnect_BE.service.*;
 import com.nimbusds.jose.JOSEException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -43,6 +42,7 @@ public class SocketHandler {
     ReadReceiptService readReceiptService;
     MessageReactionService messageReactionService;
     MemberRepository  memberRepository;
+    NotificationUserService notificationUserService;
     SocketEmitter  socketEmitter;
     @PostConstruct
     public void init() {
@@ -81,6 +81,34 @@ public class SocketHandler {
         client.sendEvent("disconnect", "Disconnected from Socket.IO server");
         log.info("Client disconnected: {}", client.getSessionId());
     }
+    @OnEvent("notif:mark-read")
+    public void onNotifMarkRead(SocketIOClient client, NotifMarkReadPayload payload) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null || payload == null || payload.getNotificationId() == null) return;
+
+        notificationUserService.markOneRead(userId, payload.getNotificationId());
+
+        // Trả lại unread mới
+        int unread = notificationUserService.getNotifications(userId).getUnread();
+        client.sendEvent("notif:unread", unread);
+
+        // Ack
+        client.sendEvent("notif:mark-read:ack", payload.getNotificationId());
+    }
+
+    // -------- Notification: đánh dấu tất cả đã đọc ----------
+    @OnEvent("notif:mark-all-read")
+    public void onNotifMarkAllRead(SocketIOClient client) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null) return;
+
+        notificationUserService.markAllRead(userId);
+
+        int unread = notificationUserService.getNotifications(userId).getUnread();
+        client.sendEvent("notif:unread", unread);
+        client.sendEvent("notif:mark-all-read:ack", "OK");
+    }
+
     // -------- Read Receipt ----------
     @OnEvent("receipt")
     public void onRead(SocketIOClient client, ReadPayload payload) {
