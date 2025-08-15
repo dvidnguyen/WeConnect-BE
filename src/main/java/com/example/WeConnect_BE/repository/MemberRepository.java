@@ -33,7 +33,7 @@ public interface MemberRepository extends JpaRepository<Member, String> {
                                     @Param("exclude") String exclude,
                                     Pageable pageable);
 
-    boolean existsByConversationIdAndUserId(String conversationId, String senderId);
+//    boolean existsByConversationIdAndUserId(String conversationId, String senderId);
 
     // MemberRepository (thêm method lọc trừ người gửi)
     @Query("select m.user.userId from Member m " +

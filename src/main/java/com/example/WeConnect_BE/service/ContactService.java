@@ -45,10 +45,12 @@ public class ContactService {
                     } else {
                         otherUser = contact.getRequesterUser();
                     }
+//                    blockedUserRepository.findBlockedCounterparts()
 
                     return ContactResponse.builder()
                             .id(otherUser.getUserId())                // id của đối phương
-                            .name(otherUser.getUsername())        // tên đối phương
+                            .name(otherUser.getUsername())
+                            .isBlock(blockedUserRepository.existsByUser_UserIdAndBlockedUser_UserId(id, otherUser.getUserId()))// tên đối phương
                             .email(otherUser.getEmail())          // email đối phương
                             .avatarUrl(otherUser.getAvatarUrl())  // avatar đối phương
                             .build();

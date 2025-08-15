@@ -24,6 +24,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -32,11 +33,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -72,7 +75,16 @@ public class SendRequestFriendService {
         friendRepository.save(friend);
         try {
             List<UserSession> userSessions =  userSessionRepository.findByUserId(request.getTo());
-            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
+            List<SocketIOClient> clients = userSessions.stream()
+                    .map(UserSession::getSessionId)
+                    .map(id -> {                       // chuyển string -> UUID an toàn
+                        try { return UUID.fromString(id); }
+                        catch (IllegalArgumentException e) { return null; }
+                    })
+                    .filter(Objects::nonNull)
+                    .map(socketIOServer::getClient) // nếu KHÔNG dùng namespace
+                    .filter(Objects::nonNull)         // bỏ các client đã disconnect/không tồn tại
+                    .collect(Collectors.toList());
             notificationService.sendNotification(clients,"friend", NotificationResponse
                     .builder()
                     .id(friend.getId())
@@ -129,9 +141,18 @@ public class SendRequestFriendService {
         try {
             Optional<User> requester = userRepository.findById(friend.getRequester().getUserId());
             List<UserSession> userSessions = userSessionRepository.findByUserId(requester.get().getUserId());
-            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
+            List<SocketIOClient> clients = userSessions.stream()
+                    .map(UserSession::getSessionId)
+                    .map(id -> {                       // chuyển string -> UUID an toàn
+                        try { return UUID.fromString(id); }
+                        catch (IllegalArgumentException e) { return null; }
+                    })
+                    .filter(Objects::nonNull)
+                    .map(socketIOServer::getClient) // nếu KHÔNG dùng namespace
+                    .filter(Objects::nonNull)         // bỏ các client đã disconnect/không tồn tại
+                    .collect(Collectors.toList());
             Optional<User> addressee = userRepository.findById(currentUserId);
-            notificationService.sendNotification(clients, "friend-rejected", NotificationResponse.builder()
+            notificationService.sendNotification(clients, "friend-accepted", NotificationResponse.builder()
                     .id(friend.getId())
                     .body("Friend request rejected")
                     .title(addressee.get().getUsername())
@@ -175,7 +196,7 @@ public class SendRequestFriendService {
             // Một request khác vừa tạo xong contact (race) -> bỏ qua
         }
     }
-
+    @Transactional
     public FriendResponse rejectFriendRequest(FriendReactionRequest request) {
         // 1) Lấy current user từ JWT
         var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
@@ -208,7 +229,16 @@ public class SendRequestFriendService {
 
             // lấy session người nhận notify
             List<UserSession> userSessions = userSessionRepository.findByUserId(requester.getUserId());
-            List<SocketIOClient> clients = (List<SocketIOClient>) userSessions.stream().map((userSession) -> socketIOServer.getClient(UUID.fromString(userSession.getSessionId())));
+            List<SocketIOClient> clients = userSessions.stream()
+                    .map(UserSession::getSessionId)
+                    .map(id -> {                       // chuyển string -> UUID an toàn
+                        try { return UUID.fromString(id); }
+                        catch (IllegalArgumentException e) { return null; }
+                    })
+                    .filter(Objects::nonNull)
+                    .map(socketIOServer::getClient) // nếu KHÔNG dùng namespace
+                    .filter(Objects::nonNull)         // bỏ các client đã disconnect/không tồn tại
+                    .collect(Collectors.toList());
            // kiểu UUID nếu bạn mapping như vậy
                         notificationService.sendNotification(
                                 clients,

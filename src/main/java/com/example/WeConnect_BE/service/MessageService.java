@@ -49,7 +49,7 @@ public class MessageService {
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
 
         // Kiểm tra membership
-        boolean isMember = memberRepository.existsByConversationIdAndUserId(conversationId, senderId);
+        boolean isMember = memberRepository.existsByConversation_IdAndUser_UserId(conversationId, senderId);
         if (!isMember) {
             throw new AppException(ErrorCode.FORBIDDEN); // hoặc lỗi riêng: NOT_CONVERSATION_MEMBER
         }
