@@ -9,17 +9,11 @@ import com.example.WeConnect_BE.dto.request.FriendRequest;
 import com.example.WeConnect_BE.dto.response.FriendPendingResponse;
 import com.example.WeConnect_BE.dto.response.FriendResponse;
 import com.example.WeConnect_BE.dto.response.NotificationResponse;
-import com.example.WeConnect_BE.entity.Contact;
-import com.example.WeConnect_BE.entity.Friend;
-import com.example.WeConnect_BE.entity.User;
-import com.example.WeConnect_BE.entity.UserSession;
+import com.example.WeConnect_BE.entity.*;
 import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.mapper.FriendMapper;
-import com.example.WeConnect_BE.repository.ContactRepository;
-import com.example.WeConnect_BE.repository.FriendRepository;
-import com.example.WeConnect_BE.repository.UserRepository;
-import com.example.WeConnect_BE.repository.UserSessionRepository;
+import com.example.WeConnect_BE.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +26,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -49,6 +41,8 @@ public class SendRequestFriendService {
     FriendRepository friendRepository;
     NotificationService notificationService;
     ContactRepository contractRepository;
+    UserNotificationRepository  userNotificationRepository;
+    NotificationRepository notificationRepository;
     FriendMapper  friendMapper;
     SocketIOServer socketIOServer;
 
@@ -69,6 +63,7 @@ public class SendRequestFriendService {
         Friend friend = Friend.builder()
                 .requester(requester.get())
                 .addressee(addressee.get())
+                .body(request.getBody())
                 .status(Friend.FriendStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -88,9 +83,10 @@ public class SendRequestFriendService {
             notificationService.sendNotification(clients,"friend", NotificationResponse
                     .builder()
                     .id(friend.getId())
-                    .body(request.getBody())
+                    .body(friend.getBody())
                     .title(requester.get().getUsername())
                     .type("FRIEND")
+                    .relatedId(friend.getId())
                     .isRead(false)
                     .senderId(requester.get().getUserId())
                     .senderName(requester.get().getUsername())
@@ -154,9 +150,10 @@ public class SendRequestFriendService {
             Optional<User> addressee = userRepository.findById(currentUserId);
             notificationService.sendNotification(clients, "friend-accepted", NotificationResponse.builder()
                     .id(friend.getId())
-                    .body("Friend request rejected")
+                    .body("đã đồng ý lời mời kết bạn")
                     .title(addressee.get().getUsername())
                     .type("FRIEND")
+                    .relatedId(friend.getId())
                     .isRead(false)
                     .senderId(addressee.get().getUserId())
                     .senderName(addressee.get().getUsername())
@@ -246,7 +243,7 @@ public class SendRequestFriendService {
                                 NotificationResponse.builder()
                                         .id(friend.getId())
                                         .title(addressee.getUsername())
-                                        .body( "Friend request rejected")
+                                        .body("đã từ chối lời mời kết bạn")
                                         .type("FRIEND")
                                         .isRead(false)
                                         .senderId(addressee.getUserId())
@@ -282,6 +279,77 @@ public class SendRequestFriendService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void cancelFriendRequestById(String currentUserId, String friendId) {
+        Friend f = friendRepository.findByIdAndRequester_UserId(friendId, currentUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+
+        if (f.getStatus() != Friend.FriendStatus.PENDING) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        // --- Xoá notification ---
+        // 1) Thử xoá theo relatedId (nếu sau này bạn đã gán)
+
+        // 2) Nếu không có (do relatedId đang null), dùng fallback theo user nhận + time window
+
+            // Lấy các noti từ 5 phút trước thời điểm tạo friend đến nay (giảm rủi ro xoá nhầm cái quá cũ)
+            LocalDateTime fromLdt = f.getCreatedAt().minusMinutes(5);
+            Date from = Date.from(fromLdt.atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Notification> notis = notificationRepository.findByTypeForUserFromTime(
+                    f.getAddressee().getUserId(),
+                    TypeNotification.friend_request,
+                    from
+            );
+
+            // Bạn có thể siết thêm tiêu chí: chỉ xoá noti mới nhất trong list
+            // hoặc noti có body trùng (nếu bạn set body từ request)
+            // Ví dụ: notis = notis.stream().limit(1).toList();
+
+
+        if (!notis.isEmpty()) {
+            userNotificationRepository.deleteAllByNotificationIn(notis);
+            notificationRepository.deleteAll(notis);
+        }
+
+        // --- Xoá record friend ---
+        friendRepository.delete(f);
+
+        try {
+            List<UserSession> userSessions =  userSessionRepository.findByUserId(f.getAddressee().getUserId());
+            List<SocketIOClient> clients = userSessions.stream()
+                    .map(UserSession::getSessionId)
+                    .map(id -> {                       // chuyển string -> UUID an toàn
+                        try { return UUID.fromString(id); }
+                        catch (IllegalArgumentException e) { return null; }
+                    })
+                    .filter(Objects::nonNull)
+                    .map(socketIOServer::getClient) // nếu KHÔNG dùng namespace
+                    .filter(Objects::nonNull)         // bỏ các client đã disconnect/không tồn tại
+                    .collect(Collectors.toList());
+            notificationService.sendNotification(clients,"friend", NotificationResponse
+                    .builder()
+                    .id(friendId)
+                    .body("đã hủy lời mời kết bạn")
+                    .title(f.getRequester().getUsername())
+                    .type("FRIEND")
+                    .relatedId(friendId)
+                    .isRead(false)
+                    .senderId(f.getRequester().getUserId())
+                    .senderName(f.getRequester().getUsername())
+                    .senderAvatarUrl(f.getRequester().getAvatarUrl())
+                    .createdAt(LocalDateTime.now())
+                    .build(), TypeNotification.friend_request
+            );
+        } catch (Exception e) {
+
+        }
+    }
+
+
+
 
 
 }

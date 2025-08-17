@@ -2,6 +2,7 @@ package com.example.WeConnect_BE.repository;
 
 import com.example.WeConnect_BE.dto.response.NotificationRaw;
 import com.example.WeConnect_BE.dto.response.NotificationResponse;
+import com.example.WeConnect_BE.entity.Notification;
 import com.example.WeConnect_BE.entity.UserNotification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -35,4 +36,7 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     @Modifying
     @Query("update UserNotification un set un.isRead = 1 where un.user.userId = :uid and un.isRead = 0")
     int markAllRead(@Param("uid") String userId);
+
+    void deleteByNotification_Id(String notificationId);
+    void deleteAllByNotificationIn(List<Notification> notifications);
 }

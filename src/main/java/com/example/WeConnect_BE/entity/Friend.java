@@ -29,6 +29,9 @@ public class Friend {
     @JoinColumn(name = "addressee_user_id")
     private User addressee;
 
+    @Column(name = "body")
+    String body;
+
     @Enumerated(EnumType.STRING)
     private FriendStatus status;
 

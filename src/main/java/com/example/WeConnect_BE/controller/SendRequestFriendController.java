@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.controller;
 
+import com.example.WeConnect_BE.Util.GetIDCurent;
 import com.example.WeConnect_BE.dto.ApiResponse;
 import com.example.WeConnect_BE.dto.request.FriendReactionRequest;
 import com.example.WeConnect_BE.dto.request.FriendRequest;
@@ -49,6 +50,17 @@ public class SendRequestFriendController {
     public ApiResponse<FriendResponse> rejectFriendRequest(@RequestBody FriendReactionRequest friendRequest) {
         return ApiResponse.<FriendResponse>builder()
                 .result(sendRequestFriendService.rejectFriendRequest(friendRequest))
+                .build();
+    }
+
+    @DeleteMapping("/cancel/{friendId}")
+    public ApiResponse<String> cancelById(@PathVariable String friendId) {
+        String me = GetIDCurent.getId();
+        sendRequestFriendService.cancelFriendRequestById(me, friendId);
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("successfull")
+                .result("")
                 .build();
     }
 }
