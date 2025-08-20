@@ -33,7 +33,6 @@ public class NotificationService {
             for (SocketIOClient socketIOClient : clients) {
                 socketIOClient.sendEvent(event, data);
                 log.info("đã gửi thông báo");
-
                 Notification notification = Notification.builder()
                         .title(data.getTitle())
                         .body(data.getBody())
