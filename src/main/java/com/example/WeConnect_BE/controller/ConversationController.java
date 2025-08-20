@@ -35,7 +35,7 @@ public class ConversationController {
     }
     //Lấy danh sách conversation (kèm lastMessage + unreadCount)
 
-    @GetMapping("/")
+    @GetMapping
     public ApiResponse<List<ConversationRow>> list() {
         var data = conversationService.getList();
         return ApiResponse.<List<ConversationRow>>builder()
