@@ -118,4 +118,5 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
     Optional<ConversationRow> findOneRowForUser(
             @Param("userId") String userId,
             @Param("conversationId") String conversationId);
+
 }

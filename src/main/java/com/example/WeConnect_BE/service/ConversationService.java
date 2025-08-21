@@ -557,6 +557,52 @@ public class ConversationService {
                 .conversationDeleted(false)
                 .build();
     }
+    @Transactional
+    public void deleteConversation(String conversationId, String requesterUserId) {
+        Conversation conv = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+
+        // 1) requester phải là member của hội thoại
+        boolean isMember = memberRepository.existsByConversation_IdAndUser_UserId(conversationId, requesterUserId);
+        if (!isMember) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        // 2) phân quyền theo loại hội thoại
+        switch (conv.getType()) {
+            case direct -> {
+                // direct: member nào cũng có thể xoá (hard delete cho cả 2 phía)
+                // Không cần check thêm role
+            }
+            case group -> {
+                // group: chỉ creator hoặc admin mới được xoá
+                boolean isCreator = conv.getCreatedBy() != null
+                        && requesterUserId.equals(conv.getCreatedBy().getUserId());
+
+                boolean isAdmin = memberRepository.existsByConversation_IdAndUser_UserId(conversationId, requesterUserId)
+                        && hasAdminRole(conversationId, requesterUserId);
+
+                if (!isCreator && !isAdmin) {
+                    throw new AppException(ErrorCode.FORBIDDEN);
+                }
+            }
+            default -> throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        // 3) Xoá: rely on JPA cascade (Conversation -> messages/members)
+        // Message -> reactions/readReceipts/files cũng đang cascade ALL
+        conversationRepository.delete(conv);
+        // flush để sớm phát hiện lỗi constraint (nếu có)
+        conversationRepository.flush();
+    }
+
+    private boolean hasAdminRole(String conversationId, String userId) {
+        // Tối ưu: viết query existsByConversation_IdAndUser_UserIdAndRole(...)
+        // Nếu bạn chưa có method này, dùng findBy... rồi kiểm tra:
+        return memberRepository.findByConversation_IdAndUser_UserId(conversationId, userId)
+                .map(m -> m.getRole() == Member.Role.admin)
+                .orElse(false);
+    }
 
 
 }

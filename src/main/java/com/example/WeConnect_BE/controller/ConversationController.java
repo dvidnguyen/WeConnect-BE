@@ -33,6 +33,18 @@ public class ConversationController {
                 .message(res.isCreated() ? "Created" : "Exists")
                 .build();
     }
+    //delete conversation
+    @DeleteMapping("/{conversationId}")
+    public ApiResponse<Void> delete(@PathVariable String conversationId) {
+        String currentUserId = GetIDCurent.getId();
+        conversationService.deleteConversation(conversationId, currentUserId);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("deleted")
+                .build();
+    }
+
+
     //Lấy danh sách conversation (kèm lastMessage + unreadCount)
 
     @GetMapping
