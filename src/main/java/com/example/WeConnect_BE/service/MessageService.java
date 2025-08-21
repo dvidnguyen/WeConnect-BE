@@ -26,7 +26,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MessageService {
-
     FileService fileService;
     MessageRepository messageRepository;
     UserRepository userRepository;
