@@ -119,4 +119,21 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
             @Param("userId") String userId,
             @Param("conversationId") String conversationId);
 
+    @Query("""
+    select c.id
+    from Conversation c
+    where c.type = 'direct'
+      and size(c.members) = 2
+      and exists (
+         select 1 from Member m1
+         where m1.conversation = c and m1.user.userId = :userId1
+      )
+      and exists (
+         select 1 from Member m2
+         where m2.conversation = c and m2.user.userId = :userId2
+      )
+""")
+    Optional<String> findDirectConversationIdBetween(@Param("userId1") String userId1,
+                                                     @Param("userId2") String userId2);
+
 }

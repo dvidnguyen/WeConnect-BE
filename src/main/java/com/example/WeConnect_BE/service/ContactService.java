@@ -9,6 +9,7 @@ import com.example.WeConnect_BE.exception.AppException;
 import com.example.WeConnect_BE.exception.ErrorCode;
 import com.example.WeConnect_BE.repository.BlockedUserRepository;
 import com.example.WeConnect_BE.repository.ContactRepository;
+import com.example.WeConnect_BE.repository.ConversationRepository;
 import com.example.WeConnect_BE.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -30,6 +31,7 @@ public class ContactService {
     ContactRepository contactRepository;
     UserRepository userRepository;
     BlockedUserRepository blockedUserRepository;
+    ConversationRepository conversationRepository;
 
     public List<ContactResponse> getContacts() {
         String id = GetIDCurent.getId(); // sub trong JWT
@@ -46,8 +48,13 @@ public class ContactService {
                         otherUser = contact.getRequesterUser();
                     }
 //                    blockedUserRepository.findBlockedCounterparts()
+                    // Tìm conversationId nếu có
+                    String conversationId = conversationRepository
+                            .findDirectConversationIdBetween(id, otherUser.getUserId())
+                            .orElse(null);
 
                     return ContactResponse.builder()
+                            .conversationId(conversationId)
                             .id(otherUser.getUserId())                // id của đối phương
                             .name(otherUser.getUsername())
                             .isBlock(blockedUserRepository.existsByUser_UserIdAndBlockedUser_UserId(id, otherUser.getUserId()))// tên đối phương
