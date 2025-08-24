@@ -144,6 +144,113 @@ public class SocketHandler {
     }
 
 
+    @OnEvent("call:invite")
+    public void onCallInvite(SocketIOClient client, com.example.WeConnect_BE.dto.request.CallInvitePayload p) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null || p == null || p.getConversationId() == null) return;
+
+        // phải là member
+        if (!memberRepository.existsByConversation_IdAndUser_UserId(p.getConversationId(), userId)) return;
+
+        // phát chuông cho các thành viên khác
+        List<String> recipients = memberRepository.findUserIdsByConversationExcept(p.getConversationId(), userId);
+        socketEmitter.emitToUsers(
+                recipients,
+                "call:ring",
+                com.example.WeConnect_BE.dto.response.CallRingEvent.builder()
+                        .conversationId(p.getConversationId())
+                        .fromUserId(userId)
+                        .media(p.getMedia() == null ? "video" : p.getMedia())
+                        .build()
+        );
+        client.sendEvent("call:invite:ack", "OK");
+    }
+
+    @OnEvent("call:accept")
+    public void onCallAccept(SocketIOClient client, com.example.WeConnect_BE.dto.request.SimpleConvPayload p) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null || p == null || p.getConversationId() == null) return;
+
+        List<String> recipients = memberRepository.findUserIdsByConversationExcept(p.getConversationId(), userId);
+        socketEmitter.emitToUsers(
+                recipients,
+                "call:accepted",
+                com.example.WeConnect_BE.dto.response.SimpleConvEvent.builder()
+                        .conversationId(p.getConversationId())
+                        .userId(userId)
+                        .build()
+        );
+    }
+
+    @OnEvent("call:reject")
+    public void onCallReject(SocketIOClient client, com.example.WeConnect_BE.dto.request.SimpleConvPayload p) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null || p == null || p.getConversationId() == null) return;
+
+        List<String> recipients = memberRepository.findUserIdsByConversationExcept(p.getConversationId(), userId);
+        socketEmitter.emitToUsers(
+                recipients,
+                "call:rejected",
+                com.example.WeConnect_BE.dto.response.SimpleConvEvent.builder()
+                        .conversationId(p.getConversationId())
+                        .userId(userId)
+                        .build()
+        );
+    }
+
+    @OnEvent("call:end")
+    public void onCallEnd(SocketIOClient client, com.example.WeConnect_BE.dto.request.SimpleConvPayload p) {
+        String userId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        if (userId == null || p == null || p.getConversationId() == null) return;
+
+        List<String> participants = memberRepository.findUserIdsByConversation(p.getConversationId());
+        socketEmitter.emitToUsers(
+                participants,
+                "call:ended",
+                com.example.WeConnect_BE.dto.response.SimpleConvEvent.builder()
+                        .conversationId(p.getConversationId())
+                        .userId(userId)
+                        .build()
+        );
+    }
+
+    @OnEvent("webrtc:offer")
+    public void onWebrtcOffer(SocketIOClient client, com.example.WeConnect_BE.dto.request.SdpPayload p) {
+        forwardRTC(client, "webrtc:offer", p, null);
+    }
+
+    @OnEvent("webrtc:answer")
+    public void onWebrtcAnswer(SocketIOClient client, com.example.WeConnect_BE.dto.request.SdpPayload p) {
+        forwardRTC(client, "webrtc:answer", p, null);
+    }
+
+    @OnEvent("webrtc:candidate")
+    public void onWebrtcCandidate(SocketIOClient client, com.example.WeConnect_BE.dto.request.IcePayload p) {
+        forwardRTC(client, "webrtc:candidate", null, p);
+    }
+
+    // helper chung
+    private void forwardRTC(SocketIOClient client, String event,
+                            com.example.WeConnect_BE.dto.request.SdpPayload sdp,
+                            com.example.WeConnect_BE.dto.request.IcePayload ice) {
+        String fromUserId = webSocketSessionService.getUserId(client.getSessionId().toString());
+        String conversationId = (sdp != null) ? sdp.getConversationId() : (ice != null ? ice.getConversationId() : null);
+        String toUserId = (sdp != null) ? sdp.getToUserId() : (ice != null ? ice.getToUserId() : null);
+
+        if (fromUserId == null || conversationId == null || toUserId == null) return;
+        if (!memberRepository.existsByConversation_IdAndUser_UserId(conversationId, fromUserId)) return;
+
+        if (sdp != null) sdp.setFromUserId(fromUserId);
+        if (ice != null) ice.setFromUserId(fromUserId);
+
+        socketEmitter.emitToUsers(
+                List.of(toUserId),
+                event,
+                (sdp != null) ? sdp : ice
+        );
+    }
+
+
 
 
     @PreDestroy
