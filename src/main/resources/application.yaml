@@ -40,7 +40,7 @@ spring:
 app:
   file:
     storage-dir: D:/upload
-    dowload-prefix: http://localhost:8080/identity/media/
+    dowload-prefix: http://localhost:8080/weconnect/media/
   cors-origin: http://localhost:5173
 logging:
   level:

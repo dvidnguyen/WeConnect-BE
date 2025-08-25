@@ -25,8 +25,8 @@ public class FileLoadRepository {
     @Value("${app.file.dowload-prefix}")
     String DowloadPrifex;
     public FileInfo upLoadFile(MultipartFile file) throws IOException {
-        Path folder  = Paths.get("D:/upload");
-        String urlPrefix = "http://localhost:8080/weconnect/media/";
+        Path folder  = Paths.get(storageDir);
+        String urlPrefix = DowloadPrifex;
         String fileExtention = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String fileName = Objects.isNull(fileExtention)
                 ? UUID.randomUUID().toString()
