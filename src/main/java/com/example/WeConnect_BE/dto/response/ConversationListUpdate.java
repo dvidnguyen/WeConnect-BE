@@ -1,0 +1,15 @@
+package com.example.WeConnect_BE.dto.response;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ConversationListUpdate {
+    String conversationId;
+    int unreadCount;
+    String lastMessage;
+}

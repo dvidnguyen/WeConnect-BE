@@ -1,6 +1,7 @@
 package com.example.WeConnect_BE.service;
 
 import com.example.WeConnect_BE.Util.SocketEmitter;
+import com.example.WeConnect_BE.dto.response.ConversationListUpdate;
 import com.example.WeConnect_BE.dto.response.MessageResponse;
 import com.example.WeConnect_BE.entity.*;
 import com.example.WeConnect_BE.exception.AppException;
@@ -104,6 +105,30 @@ public class MessageService {
         MessageResponse payload = conversationService.toDTO(saved);
         socketEmitter.emitToUsers(recipients, "message", payload);
         log.info("7");
+        // Thêm event conversation:update (chỉ chứa convId, lastMessage, unreadCount)
+        String preview;
+        if (saved.getType() == Message.Type.text) {
+            preview = saved.getContent();
+            if (preview != null && preview.length() > 150) {
+                preview = preview.substring(0, 150) + "…";
+            }
+        } else {
+            int n = (saved.getFiles()==null) ? 0 : saved.getFiles().size();
+            preview = (n <= 1) ? "[file]" : "[file] x" + n;
+        }
+
+        for (String uid : recipients) {
+            int unread = (int) messageRepository.countUnreadForUserInConversation(conversationId, uid);
+
+            ConversationListUpdate convUpdate = ConversationListUpdate.builder()
+                    .conversationId(conversationId)
+                    .lastMessage(preview)
+                    .unreadCount(unread)
+                    .build();
+
+            socketEmitter.emitToUser(uid, "conversation:update", convUpdate);
+        }
+
         return payload;
     }
 

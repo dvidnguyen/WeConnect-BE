@@ -34,6 +34,21 @@ public interface MessageRepository extends JpaRepository<Message, String> {
                          Pageable pageable);
 
     @Query("""
+        SELECT COUNT(m)
+        FROM Message m
+        WHERE m.conversation.id = :conversationId
+          AND m.sender.userId <> :userId
+          AND NOT EXISTS (
+                SELECT 1
+                FROM ReadReceipt rr
+                WHERE rr.message = m
+                  AND rr.user.userId = :userId
+          )
+    """)
+    long countUnreadForUserInConversation(@Param("conversationId") String conversationId,
+                                          @Param("userId") String userId);
+
+    @Query("""
     SELECT m FROM Message m
     WHERE m.conversation.id = :cid
       AND (m.sentAt > :sentAt
