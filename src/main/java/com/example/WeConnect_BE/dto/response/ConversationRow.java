@@ -1,5 +1,6 @@
 package com.example.WeConnect_BE.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,4 +18,9 @@ public interface ConversationRow {
     String getLastMessageSenderId();
 
     Long getUnreadCount();
+    // NHẬN từ SQL (0/1)
+    Boolean getIsBlocked();
+
+    // TRẢ ra JSON là Boolean
+
 }
